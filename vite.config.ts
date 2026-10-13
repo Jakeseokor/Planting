@@ -11,7 +11,6 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
         name: '초록 친구 – 실내 화초 가이드',
         short_name: '초록 친구',

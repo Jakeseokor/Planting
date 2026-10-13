@@ -26,6 +26,8 @@ export interface Plant {
   id: string
   name: string
   scientificName: string
+  /** 검색용 다른 이름 */
+  aliases?: string[]
   difficulty: Difficulty
   summary: string
   lightLevels: LightLevel[]

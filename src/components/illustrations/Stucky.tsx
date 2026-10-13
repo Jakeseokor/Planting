@@ -2,7 +2,11 @@ import { Grad, Pot, Svg, url, useIds, type IllustrationProps } from './kit'
 
 // [밑동 x, 잎 끝 y, 기울기, 굵기] — 원통형 잎이 부채꼴로 솟는다
 const STALKS: [number, number, number, number][] = [
-  [72, 74, -15, 11], [86, 42, -7, 12], [100, 22, 0, 13], [114, 46, 7, 12], [128, 78, 16, 11],
+  [72, 74, -15, 11],
+  [86, 42, -7, 12],
+  [100, 22, 0, 13],
+  [114, 46, 7, 12],
+  [128, 78, 16, 11],
 ]
 const BASE = 139
 
@@ -36,7 +40,12 @@ export default function Stucky({ className, title = '스투키' }: IllustrationP
                 />
               ))}
               {/* 세로 홈 */}
-              <path d={`M${x + r * 0.35} ${top + 8} V${BASE}`} stroke="#14321d" strokeOpacity="0.25" strokeWidth="0.8" />
+              <path
+                d={`M${x + r * 0.35} ${top + 8} V${BASE}`}
+                stroke="#14321d"
+                strokeOpacity="0.25"
+                strokeWidth="0.8"
+              />
               <path d={`M${x - r * 0.45} ${top + 10} V${BASE}`} stroke="#fff" strokeOpacity="0.18" strokeWidth="1.4" />
               {/* 마른 잎 끝 */}
               <path d={`M${x - 1.6} ${top} L${x} ${top - 3} L${x + 1.6} ${top}`} fill="#b59b6a" />

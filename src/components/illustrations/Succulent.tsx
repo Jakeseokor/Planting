@@ -1,12 +1,4 @@
-import {
-  Grad,
-  Leaf,
-  Pot,
-  Svg,
-  url,
-  useIds,
-  type IllustrationProps,
-} from "./kit";
+import { Grad, Leaf, Pot, Svg, url, useIds, type IllustrationProps } from './kit'
 
 // 옆에서 본 에케베리아: 바깥 잎은 눕고, 안쪽 잎일수록 곧게 선다. [각도들, 길이 비율]
 const LAYERS: [number[], number][] = [
@@ -15,19 +7,9 @@ const LAYERS: [number[], number][] = [
   [[-40, -16, 16, 40], 0.7],
   [[-20, 0, 20], 0.52],
   [[-8, 8], 0.36],
-];
+]
 
-function Rosette({
-  x,
-  y,
-  size,
-  fill,
-}: {
-  x: number;
-  y: number;
-  size: number;
-  fill: string;
-}) {
+function Rosette({ x, y, size, fill }: { x: number; y: number; size: number; fill: string }) {
   return (
     <g>
       {LAYERS.map(([angles, k], li) =>
@@ -52,22 +34,19 @@ function Rosette({
         )),
       )}
     </g>
-  );
+  )
 }
 
-export default function Succulent({
-  className,
-  title = "다육식물",
-}: IllustrationProps) {
-  const id = useIds();
-  const fill = url(id("leaf"));
+export default function Succulent({ className, title = '다육식물' }: IllustrationProps) {
+  const id = useIds()
+  const fill = url(id('leaf'))
   return (
     <Svg title={title} className={className}>
       <defs>
         {/* 밑동 청록 → 잎 끝 분홍 */}
         <Grad
-          id={id("leaf")}
-          stops={["#7fa998", "#8fb8a6", "#a3c7b6", "#a3c7b6", "#c99aa5"]}
+          id={id('leaf')}
+          stops={['#7fa998', '#8fb8a6', '#a3c7b6', '#a3c7b6', '#c99aa5']}
           x1={0}
           y1={1}
           x2={0}
@@ -83,5 +62,5 @@ export default function Succulent({
         </Pot>
       </g>
     </Svg>
-  );
+  )
 }

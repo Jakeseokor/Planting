@@ -4,11 +4,31 @@ import { Grad, Leaf, Pot, Svg, url, useIds, type IllustrationProps } from './kit
 type P = [number, number]
 // 줄기: [밑동, 조절점, 끝]
 const STEMS: [P, P, P][] = [
-  [[90, 140], [84, 100], [62, 52]],
-  [[96, 140], [94, 90], [88, 26]],
-  [[104, 140], [108, 92], [118, 30]],
-  [[110, 140], [120, 104], [144, 60]],
-  [[100, 140], [100, 110], [100, 70]],
+  [
+    [90, 140],
+    [84, 100],
+    [62, 52],
+  ],
+  [
+    [96, 140],
+    [94, 90],
+    [88, 26],
+  ],
+  [
+    [104, 140],
+    [108, 92],
+    [118, 30],
+  ],
+  [
+    [110, 140],
+    [120, 104],
+    [144, 60],
+  ],
+  [
+    [100, 140],
+    [100, 110],
+    [100, 70],
+  ],
 ]
 
 export default function ZZPlant({ className, title = '금전수' }: IllustrationProps) {
@@ -23,7 +43,10 @@ export default function ZZPlant({ className, title = '금전수' }: Illustration
         {STEMS.map(([a, c, b], si) => (
           <g key={si}>
             {/* 밑동이 통통한 줄기 */}
-            <path d={`M${a[0] - 3} ${a[1]} Q${c[0] - 1} ${c[1]} ${b[0]} ${b[1]} Q${c[0] + 1} ${c[1]} ${a[0] + 3} ${a[1]} Z`} fill={url(id('stem'))} />
+            <path
+              d={`M${a[0] - 3} ${a[1]} Q${c[0] - 1} ${c[1]} ${b[0]} ${b[1]} Q${c[0] + 1} ${c[1]} ${a[0] + 3} ${a[1]} Z`}
+              fill={url(id('stem'))}
+            />
             {Array.from({ length: 7 }, (_, i) => {
               const t = 0.32 + i * 0.105
               const p = onCurve(a, c, b, t)
@@ -42,7 +65,14 @@ export default function ZZPlant({ className, title = '금전수' }: Illustration
                 />
               )
             })}
-            <Leaf x={b[0]} y={b[1]} r={onCurve(a, c, b, 1).angle} s={{ len: 14, width: 7, a: 0.9, b: 0.7 }} fill={url(id('leaf'))} gloss />
+            <Leaf
+              x={b[0]}
+              y={b[1]}
+              r={onCurve(a, c, b, 1).angle}
+              s={{ len: 14, width: 7, a: 0.9, b: 0.7 }}
+              fill={url(id('leaf'))}
+              gloss
+            />
           </g>
         ))}
       </Pot>

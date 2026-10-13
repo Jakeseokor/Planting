@@ -29,7 +29,14 @@ export function Svg({ title, className, children }: { title: string; className?:
 }
 
 /** 잎 그라데이션: 왼쪽 위가 밝고 오른쪽 아래가 어둡다(빛이 왼쪽 위에서 들어오는 기준). */
-export function Grad({ id, stops, x2 = 1, y2 = 1, x1 = 0, y1 = 0 }: {
+export function Grad({
+  id,
+  stops,
+  x2 = 1,
+  y2 = 1,
+  x1 = 0,
+  y1 = 0,
+}: {
   id: string
   stops: string[]
   x1?: number
@@ -71,7 +78,11 @@ export type PotSize = keyof typeof POT_SIZE
  * 화분 뒤쪽 테두리·흙 → children(식물) → 화분 앞쪽 순으로 그려
  * 줄기가 흙 속으로 들어가는 것처럼 보이게 한다.
  */
-export function Pot({ kind = 'terracotta', size = 'standard', children }: {
+export function Pot({
+  kind = 'terracotta',
+  size = 'standard',
+  children,
+}: {
   kind?: PotKind
   size?: PotSize
   children?: ReactNode
@@ -117,7 +128,13 @@ export function Pot({ kind = 'terracotta', size = 'standard', children }: {
         d={`M${100 - R} ${T} A${R} ${ry} 0 0 0 ${100 + R} ${T} V${T + band} A${R} ${ry} 0 0 1 ${100 - R} ${T + band} Z`}
         fill={url(id('rim'))}
       />
-      <path d={`M${100 - R} ${T} A${R} ${ry} 0 0 0 ${100 + R} ${T}`} stroke="#fff" strokeOpacity="0.35" strokeWidth="1.2" fill="none" />
+      <path
+        d={`M${100 - R} ${T} A${R} ${ry} 0 0 0 ${100 + R} ${T}`}
+        stroke="#fff"
+        strokeOpacity="0.35"
+        strokeWidth="1.2"
+        fill="none"
+      />
     </g>
   )
 }
@@ -167,7 +184,9 @@ const range = (from = 0, to = 1) => Array.from({ length: STEPS + 1 }, (_, i) => 
 
 function outline(g: ReturnType<typeof leafGeom>, k = 1) {
   const right = range().map((t) => g.side(t, k, 1))
-  const left = range().map((t) => g.side(t, k, -1)).reverse()
+  const left = range()
+    .map((t) => g.side(t, k, -1))
+    .reverse()
   return `M${[...right, ...left].map(pt).join('L')}Z`
 }
 
@@ -212,7 +231,9 @@ export function Leaf({
 }: LeafProps) {
   const g = leafGeom(s)
   const mid = range().map(g.at)
-  const rightHalf = `M${range().map((t) => pt(g.side(t, 1, 1))).join('L')}L${[...mid].reverse().map(pt).join('L')}Z`
+  const rightHalf = `M${range()
+    .map((t) => pt(g.side(t, 1, 1)))
+    .join('L')}L${[...mid].reverse().map(pt).join('L')}Z`
   const veinPaths: string[] = []
   for (let i = 1; i <= veins; i++) {
     const t = 0.06 + (i / (veins + 1)) * 0.86
@@ -242,7 +263,15 @@ export function Leaf({
         })}
       {shade > 0 && <path d={rightHalf} fill="#000" opacity={shade} />}
       {veinPaths.map((d) => (
-        <path key={d} d={d} stroke={vein} strokeOpacity={veinOpacity} strokeWidth={veinWidth} fill="none" strokeLinecap="round" />
+        <path
+          key={d}
+          d={d}
+          stroke={vein}
+          strokeOpacity={veinOpacity}
+          strokeWidth={veinWidth}
+          fill="none"
+          strokeLinecap="round"
+        />
       ))}
       {midrib && (
         <path
@@ -257,7 +286,9 @@ export function Leaf({
       {edge && <path d={outline(g)} fill="none" stroke={edge} strokeWidth="0.7" strokeOpacity="0.7" />}
       {gloss && (
         <path
-          d={`M${range(0.18, 0.62).map((t) => pt(g.side(t, 0.55, -1))).join('L')}`}
+          d={`M${range(0.18, 0.62)
+            .map((t) => pt(g.side(t, 0.55, -1)))
+            .join('L')}`}
           stroke="#fff"
           strokeOpacity="0.28"
           strokeWidth={Math.max(1, s.width * 0.08)}
@@ -315,7 +346,13 @@ export function Frond({
   }
   return (
     <g>
-      <path d={`M${pt(from)}Q${pt(ctrl)} ${pt(to)}`} stroke={stem} strokeWidth={stemWidth} fill="none" strokeLinecap="round" />
+      <path
+        d={`M${pt(from)}Q${pt(ctrl)} ${pt(to)}`}
+        stroke={stem}
+        strokeWidth={stemWidth}
+        fill="none"
+        strokeLinecap="round"
+      />
       {items}
     </g>
   )
@@ -374,7 +411,14 @@ export function HeartLeaf({
         <path key={d} d={d} stroke={vein} strokeOpacity="0.45" strokeWidth="1" fill="none" strokeLinecap="round" />
       ))}
       <path d={`M0 -1 V${-h.len + 6}`} stroke={vein} strokeOpacity="0.7" strokeWidth="1.4" strokeLinecap="round" />
-      <path d={`M${-h.w * 0.55} ${-h.len * 0.5} Q${-h.w * 0.4} ${-h.len * 0.75} -3 ${-h.len * 0.85}`} stroke="#fff" strokeOpacity="0.25" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      <path
+        d={`M${-h.w * 0.55} ${-h.len * 0.5} Q${-h.w * 0.4} ${-h.len * 0.75} -3 ${-h.len * 0.85}`}
+        stroke="#fff"
+        strokeOpacity="0.25"
+        strokeWidth="2.2"
+        fill="none"
+        strokeLinecap="round"
+      />
     </g>
   )
 }

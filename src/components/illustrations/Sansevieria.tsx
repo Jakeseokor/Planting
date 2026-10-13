@@ -2,7 +2,13 @@ import { Grad, Leaf, Pot, Svg, url, useIds, type IllustrationProps } from './kit
 
 // [x, 기울기, 길이, 폭, 휨]
 const LEAVES: [number, number, number, number, number][] = [
-  [84, -24, 70, 15, -6], [116, 22, 74, 15, 6], [92, -9, 100, 17, -3], [110, 8, 92, 16, 4], [100, -1, 112, 18, 2], [78, -36, 52, 13, -5], [122, 34, 56, 13, 5],
+  [84, -24, 70, 15, -6],
+  [116, 22, 74, 15, 6],
+  [92, -9, 100, 17, -3],
+  [110, 8, 92, 16, 4],
+  [100, -1, 112, 18, 2],
+  [78, -36, 52, 13, -5],
+  [122, 34, 56, 13, 5],
 ]
 
 export default function Sansevieria({ className, title = '산세베리아' }: IllustrationProps) {

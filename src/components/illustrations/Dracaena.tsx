@@ -45,7 +45,14 @@ export default function Dracaena({ className, title = '행운목' }: Illustratio
             <rect x={x - w / 2} y={top} width={w} height={132 - top} fill={url(id('bark'))} />
             {/* 마디 무늬 */}
             {Array.from({ length: Math.floor((132 - top) / 7) }, (_, i) => (
-              <path key={i} d={`M${x - w / 2} ${top + 8 + i * 7} q${w / 2} 2 ${w} 0`} stroke="#3c3125" strokeOpacity="0.45" strokeWidth="0.8" fill="none" />
+              <path
+                key={i}
+                d={`M${x - w / 2} ${top + 8 + i * 7} q${w / 2} 2 ${w} 0`}
+                stroke="#3c3125"
+                strokeOpacity="0.45"
+                strokeWidth="0.8"
+                fill="none"
+              />
             ))}
             <ellipse cx={x} cy={top} rx={w / 2} ry="2" fill="#d8c7a2" />
           </g>

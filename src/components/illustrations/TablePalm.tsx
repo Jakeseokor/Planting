@@ -15,7 +15,18 @@ export default function TablePalm({ className, title = '테이블야자' }: Illu
     <Svg title={title} className={className}>
       <Pot kind="terracotta">
         {FRONDS.map(([a, c, b, n], i) => (
-          <Frond key={i} from={a} ctrl={c} to={b} count={n} start={0.3} leaflet={{ len: 24, width: 4.6 }} fill={i % 2 ? '#2f7a3c' : '#3b8a46'} stem="#4f7f3a" spread={58} />
+          <Frond
+            key={i}
+            from={a}
+            ctrl={c}
+            to={b}
+            count={n}
+            start={0.3}
+            leaflet={{ len: 24, width: 4.6 }}
+            fill={i % 2 ? '#2f7a3c' : '#3b8a46'}
+            stem="#4f7f3a"
+            spread={58}
+          />
         ))}
       </Pot>
     </Svg>

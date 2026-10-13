@@ -22,9 +22,12 @@ npm run format   # 코드 서식 정리
 
 ### A. GitHub Pages (무료, 이 저장소에 준비됨)
 
-1. GitHub 저장소 → **Settings → Pages → Build and deployment → Source** 를 **GitHub Actions** 로 바꿉니다.
-2. **Actions** 탭 → "Deploy to GitHub Pages" → **Run workflow** (이후에는 `master` 에 push 할 때마다 자동 배포).
-3. 1~2분 뒤 주소: **https://jakeseokor.github.io/Planting/**
+`master` 에 push 하면 GitHub Actions 가 빌드해서 결과를 `gh-pages` 브랜치에 올립니다.
+
+1. 첫 배포가 끝나 `gh-pages` 브랜치가 생기면, 저장소 **Settings → Pages → Build and deployment** 에서
+   **Source: Deploy from a branch**, **Branch: `gh-pages` / `(root)`** 로 저장합니다.
+2. 1~2분 뒤 주소: **https://jakeseokor.github.io/Planting/**
+3. 이후에는 `master` 에 push 할 때마다 자동 배포됩니다. (수동 실행: Actions → Deploy to GitHub Pages → Run workflow)
 
 ### B. Vercel
 

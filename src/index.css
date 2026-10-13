@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+/* 가로 iPad(넓은 가로 화면)에서만 목록 + 상세 Split View */
+@custom-variant split (@media (orientation: landscape) and (min-width: 900px));
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', sans-serif;
+  --color-bg: #f4f8f3;
+  --color-surface: #ffffff;
+  --color-surface-2: #e7f1e6;
+  --color-ink: #1f2e24;
+  --color-muted: #55685a;
+  --color-line: #d4e2d2;
+  --color-brand: #2f6b45;
+  --color-brand-soft: #d6ead7;
+  --color-warn: #c2412d;
+  --color-warn-soft: #fdecea;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f1a13;
+    --color-surface: #17251c;
+    --color-surface-2: #1f3326;
+    --color-ink: #e6efe7;
+    --color-muted: #a5b8a9;
+    --color-line: #2c4233;
+    --color-brand: #8fd19e;
+    --color-brand-soft: #24402d;
+    --color-warn: #ff8a76;
+    --color-warn-soft: #3a1d18;
+  }
+}
+
+html {
+  font-size: 18px; /* 본문 18px 기준 */
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  word-break: keep-all; /* 한글 단어 중간 줄바꿈 방지 */
+  overflow-wrap: anywhere;
+  -webkit-tap-highlight-color: transparent;
+}

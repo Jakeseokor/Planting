@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage'
 import MyPlantsPage from './pages/MyPlantsPage'
 import PlantPage from './pages/PlantPage'
 import TroublePage from './pages/TroublePage'
+import GalleryPage from './pages/GalleryPage'
 
 const TABS = [
   // 상세 화면(/plant/...)에서도 '화초 도감' 탭을 활성으로 표시
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/plant/:id" element={<PlantPage />} />
           <Route path="/my" element={<MyPlantsPage />} />
           <Route path="/trouble" element={<TroublePage />} />
+          {import.meta.env.DEV && <Route path="/gallery" element={<GalleryPage />} />}
         </Routes>
       </main>
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">

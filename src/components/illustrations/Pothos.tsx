@@ -1,44 +1,52 @@
-import { Pot, type IllustrationProps } from './Pot'
+import { Grad, HeartLeaf, Pot, Svg, url, useIds, type IllustrationProps } from './kit'
 
-const C = { dark: '#2f7a46', yellow: '#e6d36a', pot: '#6f8fa8', soil: '#5a3b2a' }
-
-// 꼭지가 (0,0), 아래(+y)로 향하는 하트 잎
-const HEART = 'M0 0 C-4 -6 -16 -6 -16 6 C-16 16 -6 22 0 28 C6 22 16 16 16 6 C16 -6 4 -6 0 0 Z'
-
-function Heart({ x, y, r, s = 1 }: { x: number; y: number; r: number; s?: number }) {
+/** 노란 대리석 무늬 */
+function Marble() {
   return (
-    <g transform={`translate(${x} ${y}) rotate(${r}) scale(${s})`}>
-      <path d={HEART} fill={C.dark} />
-      {/* 노란 무늬 */}
-      <path d="M2 4 C8 8 6 16 2 20" stroke={C.yellow} strokeWidth="3" fill="none" strokeLinecap="round" />
+    <g stroke="#ecd97a" fill="none" strokeLinecap="round">
+      <path d="M4 -8 C12 -16 8 -28 14 -36" strokeWidth="5" strokeOpacity="0.45" />
+      <path d="M-6 -22 C-12 -28 -10 -36 -14 -40" strokeWidth="3" strokeOpacity="0.4" />
+      <path d="M10 -18 C16 -20 18 -14 19 -10" strokeWidth="2" strokeOpacity="0.5" />
     </g>
   )
 }
 
-const LEFT_VINE = 'M70 138 C52 140 46 156 50 176'
-const RIGHT_VINE = 'M130 138 C150 142 156 160 152 180'
+// [x, y, 회전, 크기]
+const TOP: [number, number, number, number][] = [
+  [100, 96, -4, 1.15], [80, 104, -40, 1.05], [120, 104, 40, 1.05], [70, 126, -76, 0.9], [130, 126, 76, 0.9],
+  [90, 120, -18, 0.85], [111, 120, 20, 0.82], [62, 108, -58, 0.7], [138, 108, 58, 0.7],
+]
+const LEFT_VINE = 'M68 140 C50 144 44 160 48 182'
+const RIGHT_VINE = 'M132 140 C150 146 156 162 152 186'
+const HANG: [number, number, number, number][] = [
+  [52, 150, -150, 0.5], [46, 166, -175, 0.46], [50, 180, 160, 0.42], [148, 152, 150, 0.5], [154, 170, 175, 0.46], [152, 186, -165, 0.4],
+]
 
 export default function Pothos({ className, title = '스킨답서스' }: IllustrationProps) {
+  const id = useIds()
+  const fill = url(id('leaf'))
   return (
-    <svg viewBox="0 0 200 200" className={className} role="img" aria-label={title}>
-      {/* 화분 위 잎 무더기 */}
-      <Heart x={100} y={92} r={180} s={1.3} />
-      <Heart x={78} y={104} r={140} s={1.2} />
-      <Heart x={122} y={104} r={-140} s={1.2} />
-      <Heart x={88} y={124} r={110} s={1.05} />
-      <Heart x={114} y={124} r={-110} s={1.05} />
-      <Pot color={C.pot} rim="#86a6bf" soil={C.soil} />
-      {/* 화분 밖으로 늘어지는 덩굴 (화분 앞) */}
-      <g stroke={C.dark} strokeWidth="3" fill="none" strokeLinecap="round">
+    <Svg title={title} className={className}>
+      <defs>
+        <Grad id={id('leaf')} stops={['#6bb362', '#348343', '#1f5a2c']} />
+      </defs>
+      <Pot kind="blue">
+        {TOP.map(([x, y, r, s]) => (
+          <HeartLeaf key={`${x}${y}`} x={x} y={y + 30} r={r} scale={s} fill={fill}>
+            <Marble />
+          </HeartLeaf>
+        ))}
+      </Pot>
+      {/* 화분 밖으로 늘어지는 덩굴 */}
+      <g stroke="#3d7a3a" strokeWidth="2" fill="none" strokeLinecap="round">
         <path d={LEFT_VINE} />
         <path d={RIGHT_VINE} />
       </g>
-      <Heart x={54} y={146} r={60} s={0.75} />
-      <Heart x={48} y={162} r={70} s={0.7} />
-      <Heart x={50} y={175} r={15} s={0.6} />
-      <Heart x={148} y={150} r={-60} s={0.75} />
-      <Heart x={154} y={166} r={-70} s={0.7} />
-      <Heart x={152} y={179} r={-15} s={0.55} />
-    </svg>
+      {HANG.map(([x, y, r, s]) => (
+        <HeartLeaf key={`${x}${y}`} x={x} y={y} r={r} scale={s} fill={fill}>
+          <Marble />
+        </HeartLeaf>
+      ))}
+    </Svg>
   )
 }

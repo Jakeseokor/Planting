@@ -80,7 +80,7 @@ export default function PlantDetail({ plant }: { plant: Plant }) {
           </SectionTitle>
           <ul className="flex flex-col gap-2">
             {plant.cautions.slice(0, 3).map((c) => (
-              <li key={c.kind} className="leading-snug">
+              <li key={c.title} className="leading-snug">
                 <b className="text-warn">{c.title}</b> · {c.text}
               </li>
             ))}

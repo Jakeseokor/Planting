@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Chip from '../components/Chip'
+import NewPlantDialog from '../components/NewPlantDialog'
 import PlantCard from '../components/PlantCard'
 import { plants } from '../data/plants'
 import { DIFFICULTY_LABEL, LIGHT_LABEL, isPetSafe, type Difficulty, type LightLevel } from '../data/types'
+import { useCanAddPlants } from '../lib/claudeHost'
 import { matchesQuery } from '../lib/search'
 import { useDueCount } from '../lib/useDueCount'
 
@@ -20,6 +22,8 @@ export default function HomePage() {
   const light = params.get('l') as LightLevel | null
   const petOnly = params.get('pet') === '1'
   const due = useDueCount()
+  const canAdd = useCanAddPlants()
+  const [adding, setAdding] = useState(false)
 
   const setParam = (key: string, value: string | null) => {
     const next = new URLSearchParams(params)
@@ -41,7 +45,18 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-6">
-      <h1 className="mb-3 text-3xl font-extrabold">🌿 화초 도감</h1>
+      <div className="mb-3 flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold">🌿 화초 도감</h1>
+        {canAdd && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="ml-auto min-h-11 rounded-full bg-brand px-5 font-bold text-surface"
+          >
+            + 새 화초
+          </button>
+        )}
+      </div>
 
       {due > 0 && (
         <Link
@@ -122,6 +137,7 @@ export default function HomePage() {
           조건에 맞는 화초가 없어요. 필터를 줄여 보세요.
         </p>
       )}
+      {adding && <NewPlantDialog onClose={() => setAdding(false)} />}
     </div>
   )
 }

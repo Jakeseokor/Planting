@@ -1,7 +1,8 @@
+import { loadCustomPlants } from './customPlants'
 import type { Plant } from './types'
 
 // 재배 정보는 일반적으로 통용되는 원예 기준. 환경에 따라 달라지는 수치는 범위로 표기한다.
-export const plants: Plant[] = [
+export const builtInPlants: Plant[] = [
   {
     id: 'monstera',
     name: '몬스테라',
@@ -528,5 +529,8 @@ export const plants: Plant[] = [
     },
   },
 ]
+
+/** 기본 15종 + 사용자가 추가한 화초. 추가하면 페이지가 새 버전으로 다시 열려 이 목록도 바뀐다. */
+export const plants: Plant[] = [...builtInPlants, ...loadCustomPlants()]
 
 export const getPlant = (id: string | undefined) => plants.find((p) => p.id === id)

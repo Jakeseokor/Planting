@@ -13,6 +13,7 @@ export default function PlantCard({ plant }: { plant: Plant }) {
         <PlantIllustration id={plant.id} name={plant.name} className="mx-auto aspect-square w-full max-w-48" />
       </div>
       <h2 className="mt-3 text-xl font-bold">{plant.name}</h2>
+      {plant.custom && <span className="text-sm font-semibold text-brand">🌱 새로 추가</span>}
       <DifficultyStars level={plant.difficulty} />
     </Link>
   )

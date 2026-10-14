@@ -41,6 +41,12 @@ export interface Plant {
   /** 최대 3개 */
   cautions: Caution[]
   seasons: { warm: string[]; cold: string[] }
+  /** 사용자가 추가한 화초(AI가 정보를 만든 것) */
+  custom?: boolean
+  /** 그림을 빌려 올 비슷한 모양의 기본 화초 id */
+  illustration?: string
+  /** 도감에 추가한 날 YYYY-MM-DD */
+  addedAt?: string
 }
 
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = { 1: '쉬움', 2: '보통', 3: '어려움' }

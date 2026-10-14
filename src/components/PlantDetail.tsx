@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { CareInfo, Plant } from '../data/types'
+import { useCanAddPlants } from '../lib/claudeHost'
 import { useMyPlants } from '../lib/myPlantsContext'
+import { lookName } from '../lib/plantGenerator'
+import { plants } from '../data/plants'
+import { publishCustomPlants, publishErrorText } from '../lib/publishPlants'
 import AddPlantDialog from './AddPlantDialog'
 import { LIGHT_LABEL } from '../data/types'
 import DifficultyStars from './DifficultyStars'
@@ -22,14 +26,20 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 /** 모든 화초가 같은 형식으로 보이는 상세 화면 */
-export default function PlantDetail({ plant }: { plant: Plant }) {
+/** preview: 아직 도감에 추가하기 전 미리보기(내 화초 등록 버튼 숨김) */
+export default function PlantDetail({ plant, preview = false }: { plant: Plant; preview?: boolean }) {
   return (
     <>
       <article className="@container mx-auto flex max-w-4xl flex-col gap-4 p-4 @md:p-6">
         {/* 상단: 일러스트 + 이름 + 난이도 + 한 줄 소개 */}
         <header className="flex items-center gap-5">
           <div className="shrink-0 rounded-3xl bg-surface-2 p-2">
-            <PlantIllustration id={plant.id} name={plant.name} className="size-28 @lg:size-36" />
+            <PlantIllustration
+              id={plant.id}
+              name={plant.name}
+              look={plant.illustration}
+              className="size-28 @lg:size-36"
+            />
           </div>
           <div className="flex min-w-0 flex-col gap-1.5">
             <h1 className="text-3xl font-extrabold leading-tight">{plant.name}</h1>
@@ -44,9 +54,11 @@ export default function PlantDetail({ plant }: { plant: Plant }) {
                 </span>
               ))}
             </div>
-            <MyPlantButton plant={plant} />
+            {!preview && <MyPlantButton plant={plant} />}
           </div>
         </header>
+
+        {plant.custom && <CustomPlantNote plant={plant} preview={preview} />}
 
         {/* 핵심 정보 6칸 */}
         <section aria-label="핵심 정보" className="grid grid-cols-2 gap-3 @xl:grid-cols-3">
@@ -143,6 +155,61 @@ function MyPlantButton({ plant }: { plant: Plant }) {
         </Link>
       )}
       {adding && <AddPlantDialog presetId={plant.id} onClose={() => setAdding(false)} />}
+    </div>
+  )
+}
+
+/** 사용자가 추가한 화초: 정보 출처와 그림 대체를 밝히고, 편집 권한이 있으면 도감에서 뺄 수 있다. */
+function CustomPlantNote({ plant, preview }: { plant: Plant; preview: boolean }) {
+  const canEdit = useCanAddPlants()
+  const [confirming, setConfirming] = useState(false)
+  const [state, setState] = useState<'idle' | 'saving' | string>('idle')
+  const look = lookName(plant.illustration)
+
+  const removePlant = async () => {
+    setState('saving')
+    try {
+      await publishCustomPlants(plants.filter((p) => p.custom && p.id !== plant.id))
+    } catch (e) {
+      setState(publishErrorText((e as { code?: string }).code))
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl bg-surface-2 p-4">
+      <p>
+        🤖 <b>AI가 정리한 정보예요.</b> 키우면서 화초 상태를 보고 조절해 주세요.
+        {look && ` 그림은 모양이 비슷한 ${look} 그림으로 대신했어요.`}
+      </p>
+      {!preview && canEdit && (
+        <div className="flex flex-wrap items-center gap-2">
+          {confirming ? (
+            <>
+              <span className="font-semibold text-warn">'{plant.name}'을(를) 도감에서 뺄까요?</span>
+              <button
+                type="button"
+                onClick={removePlant}
+                disabled={state === 'saving'}
+                className="min-h-11 rounded-xl bg-warn px-4 font-bold text-surface disabled:opacity-60"
+              >
+                {state === 'saving' ? '빼는 중…' : '빼기'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="min-h-11 px-3 font-semibold text-muted"
+              >
+                취소
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setConfirming(true)} className="min-h-11 px-1 font-semibold text-warn">
+              도감에서 빼기
+            </button>
+          )}
+          {state !== 'idle' && state !== 'saving' && <span className="text-warn">{state}</span>}
+        </div>
+      )}
     </div>
   )
 }

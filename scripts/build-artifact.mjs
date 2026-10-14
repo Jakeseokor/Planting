@@ -12,10 +12,12 @@ if (!js || !css) throw new Error('빌드 결과에서 JS/CSS 파일을 찾지 �
 const code = readFileSync(join(dir, js), 'utf8').replaceAll('</script', '<\\/script')
 const style = readFileSync(join(dir, css), 'utf8')
 
+// data-app: 페이지가 새 화초를 담아 자기 자신을 다시 게시할 때 원문을 찾는 표시
 const out = `<title>초록 친구</title>
-<style>${style}</style>
+<style data-app>${style}</style>
+<script type="application/json" id="custom-plants">[]</script>
 <div id="root"></div>
-<script type="module">${code}</script>
+<script type="module" data-app>${code}</script>
 `
 writeFileSync(join(dir, 'planting.html'), out)
 console.log(`${join(dir, 'planting.html')} (${(out.length / 1024).toFixed(0)} KB)`)

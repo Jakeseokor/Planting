@@ -148,6 +148,7 @@ export default function MyPlantsPage() {
 function MyPlantRow({ row: { mp, plant, left }, today, onWater }: { row: Row; today: string; onWater: () => void }) {
   const { setLastWatered, rename, remove } = useMyPlants()
   const [open, setOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const interval = waterInterval(plant, today)
   const since = diffDays(mp.lastWatered, today)
   const pct = Math.min(100, Math.max(0, (since / interval) * 100))
@@ -221,13 +222,34 @@ function MyPlantRow({ row: { mp, plant, left }, today, onWater }: { row: Row; to
           {mp.history.length > 1 && (
             <p className="text-sm text-muted">최근 물 준 날: {mp.history.slice(0, 5).map(formatDate).join(', ')}</p>
           )}
-          <button
-            type="button"
-            onClick={() => confirm(`'${name}'을(를) 내 화초에서 지울까요?`) && remove(mp.id)}
-            className="min-h-11 self-start px-2 font-semibold text-warn"
-          >
-            🗑 내 화초에서 지우기
-          </button>
+          {/* 브라우저 확인 창 대신 화면 안에서 한 번 더 묻는다 */}
+          {confirming ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl bg-warn-soft p-3">
+              <span className="font-semibold text-warn">'{name}'을(를) 지울까요?</span>
+              <button
+                type="button"
+                onClick={() => remove(mp.id)}
+                className="min-h-11 rounded-xl bg-warn px-4 font-bold text-surface"
+              >
+                지우기
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="min-h-11 px-3 font-semibold text-muted"
+              >
+                취소
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="min-h-11 self-start px-2 font-semibold text-warn"
+            >
+              🗑 내 화초에서 지우기
+            </button>
+          )}
         </div>
       )}
     </li>

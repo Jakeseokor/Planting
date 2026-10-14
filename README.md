@@ -20,6 +20,15 @@ npm run format   # 코드 서식 정리
 
 주소가 `#/plant/...` 형태(HashRouter)이고 빌드 결과가 상대 경로라서, 아래 두 방법 모두 설정 파일 없이 동작합니다.
 
+### claude.ai 아티팩트 (지금 공개 중인 웹 버전)
+
+```bash
+npm run build:artifact   # dist-artifact/planting.html (JS·CSS를 넣은 단일 파일)
+```
+
+- 서비스 워커를 쓸 수 없는 환경이라 PWA 기능(홈 화면 설치·오프라인)은 빠지고, 화면 이동은 주소 대신 앱 안에서 처리합니다.
+- 내 화초 기록은 보는 사람의 브라우저에 따로 저장됩니다.
+
 ### A. GitHub Pages (무료, 이 저장소에 준비됨)
 
 `master` 에 push 하면 GitHub Actions 가 빌드해서 결과를 `gh-pages` 브랜치에 올립니다.

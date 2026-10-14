@@ -17,8 +17,9 @@
   --color-warn-soft: #fdecea;
 }
 
+/* 다크 모드: 기기 설정을 따르되, 페이지에 data-theme 가 지정되면 그쪽을 우선한다 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --color-bg: #0f1a13;
     --color-surface: #17251c;
     --color-surface-2: #1f3326;
@@ -29,6 +30,33 @@
     --color-brand-soft: #24402d;
     --color-warn: #ff8a76;
     --color-warn-soft: #3a1d18;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #0f1a13;
+  --color-surface: #17251c;
+  --color-surface-2: #1f3326;
+  --color-ink: #e6efe7;
+  --color-muted: #a5b8a9;
+  --color-line: #2c4233;
+  --color-brand: #8fd19e;
+  --color-brand-soft: #24402d;
+  --color-warn: #ff8a76;
+  --color-warn-soft: #3a1d18;
+  color-scheme: dark;
+}
+
+/* dark: 유틸리티도 같은 규칙을 따르게 한다 */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme='dark'] *) {
+    @slot;
   }
 }
 
@@ -42,6 +70,7 @@ body {
   background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 1rem;
   line-height: 1.5;
   word-break: keep-all; /* 한글 단어 중간 줄바꿈 방지 */
   overflow-wrap: anywhere;

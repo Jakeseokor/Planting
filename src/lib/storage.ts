@@ -34,7 +34,11 @@ export async function saveMyPlants(list: MyPlant[]) {
 
 /** 브라우저가 저장 공간을 임의로 비우지 않도록 요청 */
 export function requestPersistentStorage() {
-  navigator.storage?.persist?.().catch(() => {})
+  try {
+    navigator.storage?.persist?.().catch(() => {})
+  } catch {
+    /* 지원하지 않는 환경 */
+  }
 }
 
 export const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8)

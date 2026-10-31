@@ -182,6 +182,11 @@ function undo(){
 }
 try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
 
+/* claude.ai 페이지 안에서 열렸을 때만 플랫폼 저장 기능을 미리 준비 (다른 곳에서는 null) */
+const inFrame = (() => { try{ return window.self !== window.top; }catch(e){ return true; } })();
+const downloadsP = (window.claude && typeof window.claude.use === 'function')
+  ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+
 /* ================= 유틸 ================= */
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -724,16 +729,37 @@ const ACTIONS = {
     });
   },
   undo,
-  export(){
-    const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  async export(){
+    const json = JSON.stringify(S, null, 2);
     const name = `tire-backup-${todayStr()}.json`;
-    const file = typeof File === 'function' ? new File([blob], name, { type: 'application/json' }) : null;
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })){
-      navigator.share({ files: [file], title: '타이어 수첩 백업' }).catch(() => {});
+    // 1) claude.ai 페이지 안: 플랫폼 저장 기능(downloads) — 확인 창을 거쳐 저장
+    const dl = await downloadsP;
+    if (dl){
+      try{ await dl.save({ filename: name, data: json }); toast('백업 파일을 저장했습니다'); return; }
+      catch(e){
+        if (e && e.code === 'declined') return toast('저장을 취소했습니다');
+        if (e && e.code === 'rate_limited') return toast('잠시 후 다시 눌러 주세요');
+        // 그 밖의 오류는 아래 방법으로 이어서 시도
+      }
+    }
+    // 2) 홈 화면 앱·브라우저: 공유 시트(iPhone 파일 앱 저장) 또는 다운로드
+    const blob = new Blob([json], { type: 'application/json' });
+    try{
+      const file = typeof File === 'function' ? new File([blob], name, { type: 'application/json' }) : null;
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], title: '타이어 수첩 백업' });
+        return;
+      }
+    }catch(e){
+      if (e && e.name === 'AbortError') return; // 사용자가 공유 시트를 닫음
+    }
+    if (!dl && !inFrame){
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
       return;
     }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
-    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    // 3) 저장이 막힌 환경: 내용을 보여주고 복사
+    showBackupText(json, name);
   },
   import(){ $('#importFile').click(); },
   reset(){
@@ -741,6 +767,21 @@ const ACTIONS = {
     snapshot(); S = null; try{ localStorage.removeItem(KEY); }catch(e){} render();
   }
 };
+/* 파일 저장이 막힌 곳에서 쓰는 마지막 방법: 백업 내용을 그대로 보여주고 복사 */
+function showBackupText(json, name){
+  const d = $('#dlg');
+  d.innerHTML = `<form method="dialog"><h3>백업 내용 복사</h3>
+    <div class="small muted">이 화면에서는 파일 저장이 막혀 있습니다. 아래 내용을 복사해 메모 앱 등에 붙여 넣고, 이름을 <b>${esc(name)}</b>처럼 .json으로 저장해 두세요. 불러올 때는 그 파일을 고르면 됩니다.</div>
+    <label class="f">백업 내용<textarea id="bkText" rows="8" readonly style="font-size:12px;font-family:ui-monospace,Menlo,monospace"></textarea></label>
+    <div class="btns"><button type="button" id="dlgCancel">닫기</button><button type="button" class="primary" id="bkCopy">복사</button></div></form>`;
+  const ta = $('#bkText'); ta.value = json;
+  $('#dlgCancel').onclick = () => d.close();
+  $('#bkCopy').onclick = async () => {
+    try{ await navigator.clipboard.writeText(json); toast('복사했습니다'); }
+    catch(e){ ta.focus(); ta.select(); ta.setSelectionRange(0, json.length); toast(document.execCommand && document.execCommand('copy') ? '복사했습니다' : '내용이 선택됐습니다. 길게 눌러 복사하세요'); }
+  };
+  d.showModal();
+}
 function bindImport(){
   const inp = $('#importFile'); if (!inp) return;
   inp.onchange = async () => {

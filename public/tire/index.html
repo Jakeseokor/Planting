@@ -233,27 +233,68 @@ function estDate(targetOdo){
   return d < t ? t : d;
 }
 
+/* 위치교환 판단 규칙
+   - 각 쌍은 앞에서 최대 4만 km, 뒤에서 최대 4만 km만 쓴다.
+   - 위치교환 시점 = 앞 타이어가 앞 4만 km 또는 뒤 타이어가 뒤 4만 km에 닿는 시점 중 먼저 오는 쪽.
+   - 뒤 타이어가 뒤 4만 km에 닿았는데 앞을 한 번도 쓰지 않았다면(예: 지금의 B) 앞으로 올려 4만 km 더 쓰고,
+     앞 타이어는 뒤로 내린다(폐기·신품 없음).
+   - 그 밖에는 기본 규칙: 뒤 폐기 → 앞을 뒤로 → 신품을 앞에. 갈 자리가 없는 쌍은 폐기하고 빈자리는 신품. */
+function decide(f, r, at){
+  const s = st().stageKm;
+  const fFront = f.frontKm + (at - f.posStartOdo), rRear = r.rearKm + (at - r.posStartOdo);
+  const fEx = fFront >= s, rEx = rRear >= s;
+  const rCanFront = r.frontKm === 0;   // 앞을 한 번도 안 쓴 뒤 타이어
+  const fCanRear = f.rearKm < s;       // 뒤 사용 여유가 있는 앞 타이어
+  let fTo, rTo;
+  if (rEx && rCanFront){ rTo = 'front'; fTo = fCanRear ? 'rear' : 'scrap'; }
+  else if (rEx){ rTo = 'scrap'; fTo = fCanRear ? 'rear' : (fEx ? 'scrap' : 'front'); }
+  else if (fCanRear){ fTo = 'rear'; rTo = rCanFront ? 'front' : 'scrap'; }
+  else { fTo = 'scrap'; rTo = 'rear'; }
+  const newFront = fTo !== 'front' && rTo !== 'front';
+  const newRear  = fTo !== 'rear'  && rTo !== 'rear';
+  return { fTo, rTo, newFront, newRear, fEx, rEx };
+}
+function describe(d, fId, rId, nfId, nrId){
+  const a = [];
+  if (d.rTo === 'scrap') a.push(`${rId} 폐기`);
+  if (d.fTo === 'scrap') a.push(`${fId} 폐기`);
+  if (d.rTo === 'front') a.push(`${rId} 뒤→앞`);
+  if (d.fTo === 'rear')  a.push(`${fId} 앞→뒤`);
+  if (d.fTo === 'front') a.push(`${fId} 앞 유지`);
+  if (d.rTo === 'rear')  a.push(`${rId} 뒤 유지`);
+  if (nfId) a.push(`신품 ${nfId} → 앞`);
+  if (nrId) a.push(`신품 ${nrId} → 뒤`);
+  return a;
+}
+function whyText(d, fId, rId){
+  const S4 = km(st().stageKm), w = [];
+  if (d.fEx) w.push(`앞 ${fId}가 앞에서 ${S4}`);
+  if (d.rEx) w.push(`뒤 ${rId}가 뒤에서 ${S4}`);
+  return w.join(' · ') + ' 도달';
+}
 /* 다음 위치교환 + 이후 일정 시뮬레이션 */
 function schedule(){
   const f = mounted('front'), r = mounted('rear');
   if (!f || !r) return null;
-  // 위치교환 = 앞 타이어가 앞에서 4만 km, 또는 뒤 타이어가 뒤에서 4만 km 중 먼저 오는 시점.
-  // 뒤에서는 4만 km를 넘겨 쓰지 않는다.
-  const S4 = km(st().stageKm);
-  const ft = frontTarget(f), rt = rearTarget(r);
-  const next = Math.min(ft, rt);
-  const reason = ft === rt ? `앞 ${f.id} 앞 ${S4} · 뒤 ${r.id} 뒤 ${S4} 동시 도달`
-    : ft < rt ? `앞 ${f.id}가 앞에서 ${S4} 도달`
-    : `뒤 ${r.id}가 뒤에서 ${S4} 도달 (앞 ${f.id}는 앞 ${km(next - f.posStartOdo + f.frontKm)} 사용 후 뒤로)`;
+  const s = st().stageKm;
+  const cp = p => ({ id: p.id, frontKm: p.frontKm, rearKm: p.rearKm, posStartOdo: p.posStartOdo });
+  let vf = cp(f), vr = cp(r), k = 0;
   const plan = [];
-  let fId = f.id, rId = r.id, fT = ft, rT = rt;
   for (let i = 0; i < 4; i++){
-    const at = Math.min(fT, rT);
-    const nid = nextId(i);
-    plan.push({ odo: at, scrap: rId, move: fId, add: nid, by: fT === rT ? 'both' : fT < rT ? 'front' : 'rear' });
-    rId = fId; fId = nid; rT = at + st().stageKm; fT = at + st().stageKm;
+    const ft = vf.posStartOdo + s - vf.frontKm, rt = vr.posStartOdo + s - vr.rearKm;
+    const at = Math.min(ft, rt);
+    const d = decide(vf, vr, at);
+    const nf = d.newFront ? { id: nextId(k++), frontKm: 0, rearKm: 0, posStartOdo: at } : null;
+    const nr = d.newRear  ? { id: nextId(k++), frontKm: 0, rearKm: 0, posStartOdo: at } : null;
+    plan.push({ odo: at, d, steps: describe(d, vf.id, vr.id, nf && nf.id, nr && nr.id), reason: whyText(d, vf.id, vr.id),
+      scrap: [d.fTo === 'scrap' && vf.id, d.rTo === 'scrap' && vr.id].filter(Boolean), newCount: (nf ? 1 : 0) + (nr ? 1 : 0) });
+    vf.frontKm += at - vf.posStartOdo; vf.posStartOdo = at;
+    vr.rearKm  += at - vr.posStartOdo; vr.posStartOdo = at;
+    const nextF = d.rTo === 'front' ? vr : d.fTo === 'front' ? vf : nf;
+    const nextR = d.fTo === 'rear'  ? vf : d.rTo === 'rear'  ? vr : nr;
+    vf = nextF; vr = nextR;
   }
-  return { f, r, ft, rt, next, reason, plan };
+  return { f, r, next: plan[0].odo, reason: plan[0].reason, plan };
 }
 
 /* 알림 계산 (조기 교체 조건이 km보다 우선) */
@@ -272,7 +313,7 @@ function alerts(){
       if (age >= s.dotWarn) A.push({lv:'bad', t:`${nm} 제조 ${age.toFixed(1)}년 경과 — 교체`, d:`DOT ${p.dot} · ${s.dotWarn}년 기준 초과. km 일정보다 우선합니다.`});
       else if (age >= s.dotCaution) A.push({lv:'warn', t:`${nm} 제조 ${age.toFixed(1)}년 경과 — 주의`, d:`DOT ${p.dot} · ${fmtD(addYears(md, s.dotWarn))}에 ${s.dotWarn}년 도달`});
       else if (sc){
-        const exit = pos==='front' ? sc.plan[1]?.odo : sc.next; // 이 쌍이 폐기될 예상 주행거리
+        const exit = sc.plan.find(x => x.scrap.includes(p.id))?.odo; // 이 쌍이 폐기될 예상 주행거리
         if (exit != null){
           const exitD = estDate(exit), lim = addYears(md, s.dotWarn);
           if (lim < exitD) A.push({lv:'info', t:`${nm}: km보다 연식 한도가 먼저 옵니다`, d:`${s.dotWarn}년 도달 ${fmtD(lim)} · km 기준 폐기 예상 ${fmtD(exitD)}`});
@@ -315,6 +356,22 @@ function doRotate({ odo, date, dot, brand, reason, abnormal }){
   const id = nextId(); S.pairs.push(newPair(id, dot, brand, odo, date));
   const det = `${r.id} 폐기(앞 ${km(ru.front)} · 뒤 ${km(ru.rear)}) → ${f.id} 뒤로 이동(앞에서 ${km(f.frontKm)} 사용) → 신품 ${id} 앞 장착${dot ? ' (DOT ' + dot + ')' : ''}`;
   logEv(abnormal ? 'abnormal' : 'rotate', date, odo, abnormal ? `비정상 교체(뒤 ${r.id}): ${reason}` : '정기 위치교환', det);
+}
+/* 일정에 따른 위치교환 (판단 규칙 decide 적용) */
+function doEvent({ odo, date, nf = {}, nr = {} }){
+  const f = mounted('front'), r = mounted('rear');
+  setOdo(odo, date); fold(f); fold(r);
+  const d = decide(f, r, odo);
+  const usage = p => `앞 ${km(p.frontKm)} · 뒤 ${km(p.rearKm)}`;
+  const scrap = p => { p.status = 'scrapped'; p.scrapOdo = odo; p.scrapDate = date; p.scrapReason = '정기 위치교환(수명 도달)'; };
+  if (d.fTo === 'scrap') scrap(f); else { f.status = d.fTo; f.posStartOdo = odo; }
+  if (d.rTo === 'scrap') scrap(r); else { r.status = d.rTo; r.posStartOdo = odo; }
+  let nfId = null, nrId = null;
+  if (d.newFront){ nfId = nextId(); S.pairs.push(newPair(nfId, nf.dot, nf.brand, odo, date)); }
+  if (d.newRear){ nrId = nextId(); const p = newPair(nrId, nr.dot, nr.brand, odo, date); p.status = 'rear'; S.pairs.push(p); }
+  const steps = describe(d, f.id, r.id, nfId, nrId);
+  const det = steps.join(' → ') + ` · 사용: ${f.id}(${usage(f)}), ${r.id}(${usage(r)})`;
+  logEv('rotate', date, odo, d.newFront || d.newRear ? '정기 위치교환' : '위치교환 (앞뒤 맞바꿈)', det);
 }
 /* 앞 타이어 비정상 교체: 앞만 신품으로, 뒤는 유지 */
 function doReplaceFront({ odo, date, dot, brand, reason }){
@@ -383,7 +440,7 @@ function homeView(){
   if (sc){
     h += `<h2>예상 일정</h2><div class="card"><table class="plan">
       <tr><td>트레드 점검<div class="small muted">${km(st().treadInterval)}마다</div></td><td class="r num">${km(tNext)}<div class="small muted">${fmtD(estDate(tNext))}</div></td></tr>` +
-      sc.plan.map((p,i) => `<tr><td>${i===0?'<b>위치교환</b>':'위치교환'}<div class="small muted">${esc(p.scrap)} 폐기 · ${esc(p.move)} → 뒤 · 신품 ${esc(p.add)} → 앞</div></td><td class="r num">${km(p.odo)}<div class="small muted">${fmtD(estDate(p.odo))}</div></td></tr>`).join('') +
+      sc.plan.map((p,i) => `<tr><td>${i===0?'<b>위치교환</b>':'위치교환'}<div class="small muted">${esc(p.steps.join(' · '))}</div></td><td class="r num">${km(p.odo)}<div class="small muted">${fmtD(estDate(p.odo))}</div></td></tr>`).join('') +
       `</table><div class="small muted" style="margin-top:8px">평균 ${Math.round(kmPerDay()*30.44).toLocaleString('ko-KR')} km/월 기준 예측${S.odoLog.length < 2 ? ' (설정값 — 주행거리를 2주 이상 기록하면 실제 주행으로 계산)' : ''}. 트레드·연식 경고가 뜨면 일정보다 먼저 교체하세요.</div></div>`;
   }
   return h;
@@ -447,7 +504,7 @@ function setupView(){
       <label class="f">B 브랜드/모델<input name="brandB" placeholder="선택"></label>
       <label class="f">B 사용 거리 (뒤, km)<input name="usedB" type="number" inputmode="numeric" value="20000" required></label>
     </div>
-    <div class="small muted" style="margin-top:6px">타이어는 뒤에서 4만 km까지만 씁니다. B가 뒤에서 4만 km가 되면(사용 2만 km라면 기준일 +2만 km) 위치교환: B 폐기 → A를 뒤로 → 신품을 앞에.</div>
+    <div class="small muted" style="margin-top:6px">B가 뒤에서 4만 km가 되면(사용 2만 km라면 기준일 +2만 km) B는 앞으로 올라가 4만 km를 더 타고, A는 뒤로 내려갑니다. 각 타이어는 앞·뒤 각각 4만 km까지만 씁니다.</div>
     <div class="err" id="setupErr"></div>
     <div class="btns"><button class="primary" type="submit">시작하기</button></div>
     <div class="btns"><button type="button" data-act="import">백업 파일로 복원</button></div>
@@ -467,7 +524,7 @@ function bindSetup(){
     const A = newPair('A', f.dotA, f.brandA, odo, date);
     const B = { ...newPair('B', f.dotB, f.brandB, odo, date), status: 'rear', rearKm: usedB, mountDate: '' };
     S.pairs.push(A, B);
-    logEv('setup', date, odo, '기록 시작', `뒤 B: 뒤에서 ${km(usedB)} 사용 · 뒤 ${km(DEF_SETTINGS.stageKm)} 도달(${km(odo + DEF_SETTINGS.stageKm - usedB)})에 폐기 예정`);
+    logEv('setup', date, odo, '기록 시작', `뒤 B: 뒤에서 ${km(usedB)} 사용 · 뒤 ${km(DEF_SETTINGS.stageKm)} 도달(${km(odo + DEF_SETTINGS.stageKm - usedB)})에 앞으로 이동, A는 뒤로 예정`);
     logEv('install', date, odo, '앞 A 신품 장착 (손상으로 교체)', `기존 앞 타이어 손상 → 신품 A 앞 장착${f.dotA ? ' (DOT ' + f.dotA + ')' : ''}. 사용 0 km`);
     save(); tab = 'home'; render();
   };
@@ -502,9 +559,9 @@ function checkOdo(v){
   if (v.date < lastD) return { err: `마지막 기록일(${fmtS(lastD)})보다 이전 날짜입니다.` };
   return { odo };
 }
-function newTireFields(){
-  return `<div class="grid2"><label class="f">신품 ${nextId()} DOT 4자리<input name="dot" inputmode="numeric" maxlength="4" placeholder="예: 4226"></label>
-  <label class="f">브랜드/모델<input name="brand" placeholder="선택"></label></div>`;
+function newTireFields(dn = 'dot', bn = 'brand', id = nextId(), pos = ''){
+  return `<div class="grid2"><label class="f">신품 ${id}${pos ? ' (' + pos + ')' : ''} DOT 4자리<input name="${dn}" inputmode="numeric" maxlength="4" placeholder="예: 4226"></label>
+  <label class="f">브랜드/모델<input name="${bn}" placeholder="선택"></label></div>`;
 }
 function checkDot(v){ return v.dot && !dotDate(v.dot) ? 'DOT는 주(01~53)+연도 4자리이며 미래일 수 없습니다. 예: 4226' : null; }
 
@@ -547,7 +604,7 @@ const ACTIONS = {
     });
   },
   rotate(auto){
-    const f = mounted('front'), r = mounted('rear'), sc = schedule();
+    const f = mounted('front'), sc = schedule(), plan0 = sc.plan[0];
     if (S.odo < sc.next){
       // 4만 km 전: 실행하지 않고 남은 거리만 안내
       const d = $('#dlg');
@@ -562,14 +619,16 @@ const ACTIONS = {
       return;
     }
     openDlg(`<h3>위치교환 실행</h3>
-      ${auto ? `<div class="alert bad" style="margin-top:8px"><span class="ic">!</span><div><b>4만 km 도달 — 위치교환 시점입니다</b><span class="d">${esc(sc.reason)}</span><span class="d">타이어점에서 교환한 뒤 기록하세요. 아직 안 했다면 취소하고, 교환 후 '위치교환 실행'을 누르세요.</span></div></div>` : ''}
-      <div class="box">순서<ol><li>뒤 <b>${esc(r.id)}</b> 폐기</li><li>앞 <b>${esc(f.id)}</b> → 뒤로 이동</li><li>신품 <b>${nextId()}</b> → 앞 장착</li></ol></div>
-      ${odoDateFields('교환 시 계기판 (km)')}${newTireFields()}`, v => {
+      ${auto ? `<div class="alert bad" style="margin-top:8px"><span class="ic">!</span><div><b>위치교환 시점입니다</b><span class="d">${esc(sc.reason)}</span><span class="d">타이어점에서 교환한 뒤 기록하세요. 아직 안 했다면 취소하고, 교환 후 '위치교환 실행'을 누르세요.</span></div></div>` : ''}
+      <div class="box">순서<ol>${plan0.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>${plan0.newCount ? '' : '<div class="small muted">폐기·신품 없이 앞뒤만 맞바꿉니다.</div>'}</div>
+      ${odoDateFields('교환 시 계기판 (km)')}
+      ${plan0.d.newFront ? newTireFields('dot', 'brand', nextId(), '앞') : ''}
+      ${plan0.d.newRear ? newTireFields('dotR', 'brandR', nextId(plan0.d.newFront ? 1 : 0), '뒤') : ''}`, v => {
       const c = checkOdo(v); if (c.err) return c.err;
       if (c.odo < sc.next) return `위치교환은 ${km(sc.next)} 이상에서 기록합니다 (${sc.reason}).`;
-      const de = checkDot(v); if (de) return de;
+      const de = checkDot(v) || checkDot({ dot: v.dotR }); if (de) return de;
       snapshot();
-      doRotate({ odo: c.odo, date: v.date, dot: v.dot, brand: v.brand });
+      doEvent({ odo: c.odo, date: v.date, nf: { dot: v.dot, brand: v.brand }, nr: { dot: v.dotR, brand: v.brandR } });
       toast('위치교환을 기록했습니다');
     });
   },

@@ -34,6 +34,8 @@ export default defineConfig(({ mode }) => ({
           // 앱 전체(화초 데이터·일러스트 포함)를 설치 시점에 미리 캐시 → 비행기 모드에서도 열림
           globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
           navigateFallback: 'index.html',
+          // /tire/ 는 별도 단일 파일 앱(타이어 수첩)이라 화초 앱으로 대체하지 않는다.
+          navigateFallbackDenylist: [/\/tire\//],
         },
       }),
   ],

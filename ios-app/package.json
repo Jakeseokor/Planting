@@ -1,0 +1,20 @@
+{
+  "name": "tire-note-ios",
+  "private": true,
+  "version": "1.0.0",
+  "description": "타이어 수첩 아이폰 앱 (public/tire/index.html 을 Capacitor로 감싼 것)",
+  "scripts": {
+    "copy-web": "node -e \"require('fs').copyFileSync('../public/tire/index.html','www/index.html')\"",
+    "sync": "npm run copy-web && npx cap sync ios",
+    "open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.6.0",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/share": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0"
+  }
+}

@@ -732,6 +732,17 @@ const ACTIONS = {
   async export(){
     const json = JSON.stringify(S, null, 2);
     const name = `tire-backup-${todayStr()}.json`;
+    // 0) 아이폰 앱(Capacitor): 파일로 저장한 뒤 iOS 공유 시트(파일 앱 저장·에어드롭 등)
+    const cap = window.Capacitor;
+    if (cap && cap.isNativePlatform && cap.isNativePlatform() && cap.Plugins && cap.Plugins.Filesystem && cap.Plugins.Share){
+      try{
+        const { uri } = await cap.Plugins.Filesystem.writeFile({ path: name, data: json, directory: 'CACHE', encoding: 'utf8' });
+        await cap.Plugins.Share.share({ title: '타이어 수첩 백업', files: [uri] });
+      }catch(e){
+        if (!/cancel/i.test(String(e && (e.message || e)))) showBackupText(json, name);
+      }
+      return;
+    }
     // 1) claude.ai 페이지 안: 플랫폼 저장 기능(downloads) — 확인 창을 거쳐 저장
     const dl = await downloadsP;
     if (dl){

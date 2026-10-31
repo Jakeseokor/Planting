@@ -1,0 +1,9 @@
+{
+  "appId": "com.jakeseokor.tirenote",
+  "appName": "타이어 수첩",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#111418"
+  }
+}

@@ -9,8 +9,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#111418" media="(prefers-color-scheme: dark)" />
-<link rel="apple-touch-icon" id="touchIcon" href="" />
-<link rel="manifest" id="manifest" href="" />
 <title>타이어 수첩</title>
 <style>
 :root{
@@ -350,7 +348,7 @@ function pairCard(p, pos){
     <div class="lab">${pos === 'front' ? '앞바퀴' : '뒷바퀴'}</div>
     <div class="pair-head"><span class="chip">${esc(p.id)}</span>
       <div class="meta"><div>${esc(p.brand) || '<span class="muted">브랜드 미입력</span>'}</div>
-      <div class="small muted">장착 ${fmtS(p.mountDate)}${p.scrapAtOdo != null ? ' · 폐기 지정 ' + km(p.scrapAtOdo) : ''}</div></div>
+      <div class="small muted">${p.mountDate ? '장착 ' + fmtS(p.mountDate) : '기록 이전부터 장착'}${p.scrapAtOdo != null ? ' · 폐기 지정 ' + km(p.scrapAtOdo) : ''}</div></div>
       <button class="edit" data-edit="${esc(p.id)}">수정</button></div>
     <div class="row"><span>${pos === 'front' ? '앞 단계' : '뒤 단계'}</span><span class="num">${km(stageUsed)} / ${km(stageLim)}</span></div>
     <div class="bar"><i class="${barCls(x)}" style="width:${Math.min(100, x*100)}%"></i></div>
@@ -394,7 +392,7 @@ function logView(){
   h += `<h2>타이어 쌍</h2><div class="card"><table class="plan">` + all.map(p => {
     const u = used(p);
     const stt = p.status === 'front' ? '<span class="tag ok">앞 장착</span>' : p.status === 'rear' ? '<span class="tag ok">뒤 장착</span>' : '<span class="tag warn">폐기</span>';
-    return `<tr><td><b>${esc(p.id)}</b> ${stt}<div class="small muted">DOT ${esc(p.dot)||'-'} · ${esc(p.brand)||''} 장착 ${fmtS(p.mountDate)}${p.status==='scrapped' ? ` · 폐기 ${fmtS(p.scrapDate)} (${esc(p.scrapReason)})` : ''}</div></td>
+    return `<tr><td><b>${esc(p.id)}</b> ${stt}<div class="small muted">DOT ${esc(p.dot)||'-'} · ${esc(p.brand)||''} ${p.mountDate ? '장착 ' + fmtS(p.mountDate) : '기록 이전 장착'}${p.status==='scrapped' ? ` · 폐기 ${fmtS(p.scrapDate)} (${esc(p.scrapReason)})` : ''}</div></td>
       <td class="r num">${km(u.total)}<div class="small muted">앞 ${km(u.front)} · 뒤 ${km(u.rear)}</div></td></tr>`;
   }).join('') + `</table></div>`;
   return h;
@@ -471,6 +469,7 @@ function bindSetup(){
     logEv('install', date, odo, '앞 A 신품 장착 (손상으로 교체)', `기존 앞 타이어 손상 → 신품 A 앞 장착${f.dotA ? ' (DOT ' + f.dotA + ')' : ''}. 사용 0 km`);
     save(); tab = 'home'; render();
   };
+  document.querySelectorAll('#setupForm [data-act]').forEach(b => b.onclick = () => ACTIONS[b.dataset.act]());
   bindImport();
 }
 
@@ -497,6 +496,8 @@ function checkOdo(v){
   if (!(odo >= 0) || v.odo === '') return { err: '주행거리를 입력하세요.' };
   if (odo < S.odo) return { err: `현재 기록(${km(S.odo)})보다 작습니다. 잘못 입력했다면 설정 → 되돌리기를 쓰세요.` };
   if (!v.date) return { err: '날짜를 입력하세요.' };
+  const lastD = S.odoLog[S.odoLog.length-1].date;
+  if (v.date < lastD) return { err: `마지막 기록일(${fmtS(lastD)})보다 이전 날짜입니다.` };
   return { odo };
 }
 function newTireFields(){
@@ -656,11 +657,12 @@ document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab =
     g.fillStyle = '#4ade80'; g.beginPath(); g.arc(0,0,18,0,Math.PI*2); g.fill();
     g.fillStyle = '#0b0f14'; g.font = 'bold 22px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('⚡',0,1);
     const png = c.toDataURL('image/png');
-    $('#touchIcon').href = png;
+    const addLink = (rel, href) => { const l = document.createElement('link'); l.rel = rel; l.href = href; document.head.appendChild(l); };
+    addLink('apple-touch-icon', png);
     const base = location.href.split('#')[0];
     const man = { name: '타이어 수첩', short_name: '타이어', lang: 'ko', display: 'standalone', start_url: base, scope: base.replace(/[^/]*$/, ''),
       background_color: '#111418', theme_color: '#111418', icons: [{ src: png, sizes: '180x180', type: 'image/png' }] };
-    $('#manifest').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(man));
+    addLink('manifest', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(man)));
   }catch(e){}
 })();
 

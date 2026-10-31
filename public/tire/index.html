@@ -235,19 +235,18 @@ function estDate(targetOdo){
 function schedule(){
   const f = mounted('front'), r = mounted('rear');
   if (!f || !r) return null;
+  // 위치교환은 앞 타이어가 앞에서 4만 km(단계 거리)를 채울 때만 실행한다.
+  // 뒤 타이어의 한도(rt)는 일정을 당기지 않고 경고로만 쓴다.
   const ft = frontTarget(f), rt = rearTarget(r);
-  const next = Math.min(ft, rt);
-  let reason;
-  if (ft === rt) reason = `앞(${f.id}) 4만 km 도달 · 뒤(${r.id}) 폐기 시점 동시`;
-  else if (ft < rt) reason = `앞 타이어 ${f.id}가 앞에서 ${km(st().stageKm)} 도달`;
-  else reason = `뒤 타이어 ${r.id}가 ${r.scrapAtOdo != null ? '지정 폐기 시점' : '뒤에서 ' + km(st().stageKm)} 도달 (앞 ${f.id}는 앞에서 ${km(next - f.posStartOdo + f.frontKm)} 사용 후 이동)`;
+  const next = ft;
+  const reason = `앞 타이어 ${f.id}가 앞에서 ${km(st().stageKm)} 도달`;
   const plan = [];
-  let fId = f.id, rId = r.id, fT = ft, rT = rt;
+  let fId = f.id, rId = r.id, fT = ft;
   for (let i = 0; i < 4; i++){
-    const at = Math.min(fT, rT);
+    const at = fT;
     const nid = nextId(i);
     plan.push({ odo: at, scrap: rId, move: fId, add: nid });
-    rId = fId; fId = nid; rT = at + st().stageKm; fT = at + st().stageKm;
+    rId = fId; fId = nid; fT = at + st().stageKm;
   }
   return { f, r, ft, rt, next, reason, plan };
 }
@@ -276,6 +275,11 @@ function alerts(){
       }
     } else A.push({lv:'info', t:`${nm} 제조일(DOT) 미입력`, d:'연식 경고를 받으려면 타이어 측면 DOT 끝 4자리를 입력하세요.'});
   });
+  if (sc && sc.rt < sc.next){
+    const r = sc.r;
+    if (S.odo >= sc.rt) A.push({lv:'warn', t:`뒤 ${r.id} 뒤 단계 한도 ${km(S.odo - sc.rt)} 초과`, d:`위치교환은 앞 ${sc.f.id}가 4만 km 되는 ${km(sc.next)}에 합니다. 그때까지 트레드를 자주 확인하고, ${s.treadLimit.toFixed(1)}mm 이하면 '비정상 교체'로 바꾸세요.`});
+    else A.push({lv:'info', t:`뒤 ${r.id}는 위치교환 전에 뒤 한도 도달 예상`, d:`뒤 한도 ${km(sc.rt)} · 위치교환 ${km(sc.next)}. 이 구간에서는 트레드를 자주 확인하세요.`});
+  }
   if (sc){
     const left = sc.next - S.odo;
     if (left <= 0) A.push({lv:'bad', t:`위치교환 시점 ${left===0?'도달':km(-left)+' 초과'}`, d:sc.reason});
@@ -374,7 +378,7 @@ function homeView(){
   h += `<h2>기록하기</h2><div class="actions">
     <button class="primary" data-act="odo">주행거리 입력</button>
     <button data-act="tread">트레드 측정</button>
-    <button data-act="rotate">위치교환 실행</button>
+    <button data-act="rotate">위치교환 실행${sc && sc.next > S.odo ? `<div class="small muted" style="font-weight:500">${km(sc.next - S.odo)} 남음</div>` : ''}</button>
     <button class="danger" data-act="abnormal">비정상 교체</button></div>`;
   if (sc){
     h += `<h2>예상 일정</h2><div class="card"><table class="plan">
@@ -442,9 +446,9 @@ function setupView(){
       <label class="f">B 제조일 DOT 4자리<input name="dotB" inputmode="numeric" maxlength="4" pattern="\\d{4}" placeholder="예: 1224"></label>
       <label class="f">B 브랜드/모델<input name="brandB" placeholder="선택"></label>
       <label class="f">B 사용 거리 (뒤, km)<input name="usedB" type="number" inputmode="numeric" value="20000" required></label>
-      <label class="f">B 폐기 시점 (기준일 +km)<input name="scrapB" type="number" inputmode="numeric" value="40000" placeholder="비우면 뒤 4만 km"></label>
+      <label class="f">B 뒤 사용 한도 (기준일 +km)<input name="scrapB" type="number" inputmode="numeric" value="40000" placeholder="비우면 뒤 4만 km"></label>
     </div>
-    <div class="small muted" style="margin-top:6px">예외: B는 기준일 +4만 km(=A의 첫 위치교환 시점)에 폐기합니다. 비워 두면 일반 규칙(뒤에서 4만 km = +2만 km)이 적용됩니다.</div>
+    <div class="small muted" style="margin-top:6px">위치교환은 앞 A가 앞에서 4만 km가 되는 기준일 +4만 km에 하고, 그때 B를 폐기합니다. 이 칸은 B 경고 기준입니다(기본 +4만 km = 위치교환 시점이라 중간 경고 없음). 비우면 +2만 km(뒤 4만 km)부터 트레드 확인 경고가 뜹니다.</div>
     <div class="err" id="setupErr"></div>
     <div class="btns"><button class="primary" type="submit">시작하기</button></div>
     <div class="btns"><button type="button" data-act="import">백업 파일로 복원</button></div>
@@ -510,8 +514,11 @@ const ACTIONS = {
   odo(){
     openDlg(`<h3>주행거리 입력</h3><div class="small muted">계기판 누적 km. 자주 입력할수록 예상 날짜가 정확해집니다.</div>${odoDateFields()}`, v => {
       const c = checkOdo(v); if (c.err) return c.err;
+      const sc = schedule(), before = S.odo;
       snapshot(); setOdo(c.odo, v.date);
       logEv('odo', v.date, c.odo, '주행거리 기록', '');
+      // 4만 km 지점을 넘으면 위치교환 화면을 자동으로 연다
+      if (sc && before < sc.next && c.odo >= sc.next) setTimeout(() => ACTIONS.rotate(true), 50);
     });
   },
   tread(){
@@ -541,18 +548,30 @@ const ACTIONS = {
       logEv('tread', v.date, c.odo, '트레드 측정', parts.join(' · '));
     });
   },
-  rotate(){
+  rotate(auto){
     const f = mounted('front'), r = mounted('rear'), sc = schedule();
-    const early = sc.next > S.odo;
+    if (S.odo < sc.next){
+      // 4만 km 전: 실행하지 않고 남은 거리만 안내
+      const d = $('#dlg');
+      d.innerHTML = `<form method="dialog"><h3>아직 위치교환 시점이 아닙니다</h3>
+        <div class="box">앞 <b>${esc(f.id)}</b>가 앞에서 <b>${km(st().stageKm)}</b>를 채우는 <b>${km(sc.next)}</b>에 실행합니다.<br>
+        남은 거리 <b>${km(sc.next - S.odo)}</b> · 예상 ${fmtD(estDate(sc.next))}</div>
+        <div class="small muted" style="margin-top:10px">주행거리를 입력해 ${km(sc.next)} 이상이 되면 위치교환 화면이 자동으로 열립니다. 손상·트레드 ${st().treadLimit.toFixed(1)}mm 이하·연식 초과로 먼저 바꿔야 하면 '비정상 교체'를 쓰세요.</div>
+        <div class="btns"><button type="button" id="dlgCancel">닫기</button><button type="button" class="danger" id="goAbn">비정상 교체</button></div></form>`;
+      $('#dlgCancel').onclick = () => d.close();
+      $('#goAbn').onclick = () => { d.close(); ACTIONS.abnormal(); };
+      d.showModal();
+      return;
+    }
     openDlg(`<h3>위치교환 실행</h3>
+      ${auto ? `<div class="alert bad" style="margin-top:8px"><span class="ic">!</span><div><b>${km(st().stageKm)} 도달 — 위치교환 시점입니다</b><span class="d">타이어점에서 교환한 뒤 기록하세요. 아직 안 했다면 취소하고, 교환 후 '위치교환 실행'을 누르세요.</span></div></div>` : ''}
       <div class="box">순서<ol><li>뒤 <b>${esc(r.id)}</b> 폐기</li><li>앞 <b>${esc(f.id)}</b> → 뒤로 이동</li><li>신품 <b>${nextId()}</b> → 앞 장착</li></ol></div>
-      ${early ? `<div class="alert warn" style="margin-top:10px"><span class="ic">!</span><div><b>예정보다 ${km(sc.next - S.odo)} 이릅니다</b><span class="d">사유를 남기면 이력에 기록됩니다.</span></div></div>` : ''}
-      ${odoDateFields('교환 시 계기판 (km)')}${newTireFields()}
-      ${early ? '<label class="f">조기 교환 사유<input name="reason" placeholder="예: 트레드 3mm, 타이어점 권고"></label>' : ''}`, v => {
+      ${odoDateFields('교환 시 계기판 (km)')}${newTireFields()}`, v => {
       const c = checkOdo(v); if (c.err) return c.err;
+      if (c.odo < sc.next) return `위치교환은 ${km(sc.next)}(앞 ${km(st().stageKm)}) 이상에서 기록합니다.`;
       const de = checkDot(v); if (de) return de;
       snapshot();
-      doRotate({ odo: c.odo, date: v.date, dot: v.dot, brand: v.brand, reason: v.reason ? '조기 위치교환: ' + v.reason : '' });
+      doRotate({ odo: c.odo, date: v.date, dot: v.dot, brand: v.brand });
       toast('위치교환을 기록했습니다');
     });
   },

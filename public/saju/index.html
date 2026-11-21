@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>사주 명식</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@600;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+/* 레이아웃: 한 줄기 세로 흐름 — 입력 카드 → 결론 → 명식표(시·일·월·년, 오른쪽에서 왼쪽) → 풀이 → 대운 띠 */
+:root {
+  --bg: #f1f0ec;
+  --paper: #fbfaf7;
+  --ink: #23252b;
+  --muted: #6a6c73;
+  --line: #d9d6cf;
+  --accent: #2f3f73;      /* 쪽빛 */
+  --accent-soft: #e3e6f0;
+  --wood: #3c7a4c; --fire: #c0412c; --earth: #a77a1c; --metal: #7c818b; --water: #26487e;
+  --good: #2f7a4a; --warn: #b5562b;
+  --f-display: 'Gowun Batang', 'Noto Serif KR', serif;
+  --f-hanja: 'Noto Serif KR', 'Gowun Batang', serif;
+  --f-body: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #16181d; --paper: #1f2228; --ink: #e8e6e1; --muted: #a2a3a8; --line: #343840;
+  --accent: #9fb0e6; --accent-soft: #283048;
+  --wood: #6dbb80; --fire: #ef7a62; --earth: #d9ae55; --metal: #b4b9c2; --water: #7ea6e8;
+  --good: #6dc28c; --warn: #f0935f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #16181d; --paper: #1f2228; --ink: #e8e6e1; --muted: #a2a3a8; --line: #343840;
+  --accent: #9fb0e6; --accent-soft: #283048;
+  --wood: #6dbb80; --fire: #ef7a62; --earth: #d9ae55; --metal: #b4b9c2; --water: #7ea6e8;
+  --good: #6dc28c; --warn: #f0935f; color-scheme: dark }
+
+* { box-sizing: border-box }
+html, body { margin: 0 }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.65;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px }
+.wrap { max-width: 760px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; min-width: 0 }
+.wrap > * { min-width: 0; max-width: 100% }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.3 }
+h1 { font-size: 2rem }
+h2 { font-size: 1.3rem; display: flex; align-items: baseline; gap: 10px }
+h2 .hj { font-family: var(--f-hanja); color: var(--muted); font-size: .9rem; font-weight: 600 }
+p { margin: 0 }
+.lead { color: var(--muted) }
+.masthead { display: flex; align-items: center; gap: 16px }
+.seal { flex: none; width: 56px; height: 56px; border: 2px solid var(--fire); color: var(--fire); border-radius: 8px; display: grid; place-items: center;
+  font-family: var(--f-hanja); font-weight: 900; font-size: 1.05rem; line-height: 1.05; text-align: center; transform: rotate(-4deg) }
+
+section { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.label { font-size: .78rem; color: var(--muted); letter-spacing: .04em }
+
+/* 입력 */
+form { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px 12px }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.c2 { grid-column: span 2 } .c3 { grid-column: span 3 } .c6 { grid-column: span 6 }
+input, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; min-width: 0 }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden }
+.seg label { flex: 1; text-align: center; padding: 8px 0; cursor: pointer; background: var(--bg) }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px }
+.seg input:checked + span { color: var(--paper); }
+.seg label:has(input:checked) { background: var(--accent); color: var(--paper) }
+.seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -3px }
+.check { display: flex; align-items: center; gap: 6px; font-size: .9rem; cursor: pointer }
+.check input { width: auto }
+.convert { font-size: .88rem; color: var(--accent); min-height: 1.4em }
+.convert.err { color: var(--warn) }
+details { font-size: .9rem }
+summary { cursor: pointer; color: var(--muted) }
+details .inner { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 10px }
+button.primary { grid-column: span 6; font: inherit; font-weight: 700; font-size: 1.05rem; padding: 12px; border: 0; border-radius: 8px;
+  background: var(--accent); color: var(--paper); cursor: pointer }
+button.primary:hover { filter: brightness(1.08) }
+.sample-note { font-size: .82rem; color: var(--muted); grid-column: span 6; text-align: center; margin-top: -6px }
+
+/* 결론 */
+.verdict { border-color: var(--accent); }
+.verdict h2 { font-size: 1.5rem }
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { font-size: .82rem; padding: 3px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-weight: 500 }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px }
+.cols > div { min-width: 0 }
+ul.plain { margin: 6px 0 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px }
+
+/* 명식표 */
+.chart-scroll { overflow-x: auto }
+table.ms { width: 100%; border-collapse: collapse; text-align: center; min-width: 340px; table-layout: fixed }
+.ms th { font-weight: 500; font-size: .82rem; color: var(--muted); padding: 4px }
+.ms th small { display: block; font-size: .72rem; font-weight: 400 }
+.ms td { padding: 4px; border-top: 1px solid var(--line); font-size: .85rem }
+.ms td.rowh { color: var(--muted); font-size: .75rem; text-align: left; width: 58px }
+.glyph { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 8px; color: var(--paper); line-height: 1 }
+.glyph b { font-family: var(--f-hanja); font-size: 2rem; font-weight: 900 }
+.glyph i { font-style: normal; font-size: .7rem; margin-top: 3px; opacity: .9 }
+.el0 { background: var(--wood) } .el1 { background: var(--fire) } .el2 { background: var(--earth) } .el3 { background: var(--metal) } .el4 { background: var(--water) }
+.t0 { color: var(--wood) } .t1 { color: var(--fire) } .t2 { color: var(--earth) } .t3 { color: var(--metal) } .t4 { color: var(--water) }
+.me { outline: 2px solid var(--ink); outline-offset: 2px }
+.empty-glyph { display: inline-grid; place-items: center; width: 64px; height: 64px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: .75rem }
+.god { font-weight: 500 }
+
+/* 오행 막대 */
+.bars { display: flex; flex-direction: column; gap: 8px }
+.bar { display: grid; grid-template-columns: 64px 1fr 72px; align-items: center; gap: 10px; font-size: .9rem }
+.track { height: 12px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--line) }
+.track span { display: block; height: 100% }
+.num { font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); font-size: .82rem }
+
+/* 신강 미터 */
+.meter { position: relative; height: 10px; border-radius: 99px; background: linear-gradient(90deg, var(--water), var(--accent-soft) 50%, var(--fire)); }
+.meter i { position: absolute; top: -5px; width: 4px; height: 20px; background: var(--ink); border-radius: 2px; transform: translateX(-50%) }
+.meter-l { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted) }
+.lucky { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px }
+.lucky div { background: var(--bg); border-radius: 8px; padding: 10px; min-width: 0 }
+.lucky b { display: block; font-size: .95rem }
+
+.list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none }
+.list li { display: flex; gap: 10px; align-items: baseline }
+.tag { flex: none; font-size: .75rem; padding: 1px 8px; border-radius: 4px; border: 1px solid currentColor; font-weight: 500 }
+.tag.hap { color: var(--good) } .tag.chung { color: var(--warn) } .tag.sal { color: var(--accent) }
+
+/* 대운 */
+.dw { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px }
+.dw div { flex: none; width: 66px; text-align: center; border: 1px solid var(--line); border-radius: 8px; padding: 8px 4px; background: var(--bg) }
+.dw div.cur { border: 2px solid var(--accent); background: var(--accent-soft) }
+.dw .age { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.dw .gz { font-family: var(--f-hanja); font-size: 1.35rem; font-weight: 900; line-height: 1.2; display: block }
+.dw .gd { font-size: .7rem; color: var(--muted) }
+.dw .mark { font-size: .7rem; font-weight: 700 }
+.mark.up { color: var(--good) } .mark.down { color: var(--warn) }
+.years { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.year { background: var(--bg); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0 }
+.year h3 { font-size: 1.05rem; display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
+.grade { font-family: var(--f-body); font-size: .8rem; padding: 1px 8px; border-radius: 4px; color: var(--paper) }
+.g-대길, .g-길 { background: var(--good) } .g-보통 { background: var(--metal) } .g-주의 { background: var(--warn) }
+.basis { font-size: .82rem; color: var(--muted); display: grid; grid-template-columns: auto 1fr; gap: 4px 14px }
+.basis dt { color: var(--ink) } .basis dd { margin: 0 }
+.foot { font-size: .8rem; color: var(--muted); text-align: center }
+.example-flag { font-size: .78rem; background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 4px; align-self: flex-start }
+
+/* 쇼츠 영상 */
+.shorts { border-color: var(--accent) }
+.shorts button.primary { align-self: flex-start; padding: 12px 28px }
+.shorts button.primary:disabled { opacity: .6; cursor: progress }
+.sh-stage { align-self: center; width: min(300px, 72vw); aspect-ratio: 9 / 16; max-width: 100%; border-radius: 12px; overflow: hidden; background: #10142a }
+.sh-stage canvas, .sh-stage video { display: block; width: 100%; height: 100% }
+.sh-progress { height: 8px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); overflow: hidden }
+.sh-progress span { display: block; height: 100%; width: 0; background: var(--accent) }
+.sh-status { font-size: .88rem; color: var(--muted); min-height: 1.4em }
+.sh-status.err { color: var(--warn) }
+.sh-actions { display: flex; flex-wrap: wrap; gap: 8px }
+.sh-btn { font: inherit; font-weight: 700; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--accent); background: var(--paper); color: var(--accent); cursor: pointer; text-decoration: none }
+.sh-btn.main { background: var(--accent); color: var(--paper) }
+.sh-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+@media (max-width: 560px) {
+  form { grid-template-columns: repeat(2, 1fr) }
+  .c2, .c3 { grid-column: span 1 } .c6, button.primary, .sample-note { grid-column: span 2 }
+  .cols, .years { grid-template-columns: 1fr }
+  .lucky { grid-template-columns: 1fr 1fr }
+  .glyph, .empty-glyph { width: 52px; height: 52px } .glyph b { font-size: 1.6rem }
+  h1 { font-size: 1.6rem }
+}
+@media (prefers-reduced-motion: no-preference) { #result { transition: opacity .25s } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="seal" aria-hidden="true">四柱<br>八字</div>
+    <div>
+      <h1>사주 명식</h1>
+      <p class="lead">음력 생년월일과 태어난 시간으로 네 기둥 여덟 글자를 세우고 풀어 드립니다.</p>
+    </div>
+  </header>
+
+  <section aria-labelledby="in-h">
+    <h2 id="in-h">생년월일시 입력 <span class="hj">生年月日時</span></h2>
+    <form id="f" novalidate>
+      <div class="field c3"><label class="label" for="name">이름 (선택)</label><input id="name" maxlength="20" placeholder="홍길동"></div>
+      <div class="field c3"><span class="label">성별</span>
+        <div class="seg" role="radiogroup" aria-label="성별">
+          <label><input type="radio" name="g" id="gM" value="M" checked><span>남</span></label>
+          <label><input type="radio" name="g" id="gF" value="F"><span>여</span></label>
+        </div></div>
+      <div class="field c2"><label class="label" for="ly">음력 년</label><input id="ly" type="number" inputmode="numeric" min="1900" max="2050" value="1985"></div>
+      <div class="field c2"><label class="label" for="lm">음력 월</label><select id="lm"></select></div>
+      <div class="field c2"><label class="label" for="ld">음력 일</label><select id="ld"></select></div>
+      <div class="field c6" style="flex-direction:row;flex-wrap:wrap;gap:6px 18px;align-items:center">
+        <label class="check"><input type="checkbox" id="leap"> 윤달</label>
+        <span class="convert" id="conv" aria-live="polite"></span>
+      </div>
+      <div class="field c3"><label class="label" for="tm">태어난 시간</label><input id="tm" type="time" value="07:30"></div>
+      <div class="field c3"><span class="label">&nbsp;</span><label class="check" style="padding-top:8px"><input type="checkbox" id="tmx"> 시간을 몰라요 (시주 없이 6글자로)</label></div>
+      <div class="field c6">
+        <details>
+          <summary>보정 설정 (출생지·자시 기준)</summary>
+          <div class="inner">
+            <div class="field"><label class="label" for="place">출생지 (지방시 보정)</label>
+              <select id="place">
+                <option value="126.98">서울 (−32분)</option><option value="126.70">인천 (−33분)</option><option value="127.01">수원 (−32분)</option>
+                <option value="127.73">춘천 (−29분)</option><option value="128.90">강릉 (−24분)</option><option value="127.49">청주 (−30분)</option>
+                <option value="127.38">대전 (−30분)</option><option value="127.15">전주 (−31분)</option><option value="126.85">광주 (−33분)</option>
+                <option value="128.60">대구 (−26분)</option><option value="129.31">울산 (−23분)</option><option value="129.08">부산 (−24분)</option>
+                <option value="128.68">창원 (−25분)</option><option value="126.53">제주 (−34분)</option><option value="none">보정 안 함 (시계 시각 그대로)</option>
+              </select></div>
+            <div class="field"><label class="label" for="zi">밤 11시~자정 출생</label>
+              <select id="zi"><option value="next">다음 날 일주로 (정자시 통합, 기본)</option><option value="same">당일 일주 유지 (야자시)</option></select></div>
+          </div>
+        </details>
+      </div>
+      <button class="primary" type="submit">사주 보기</button>
+      <p class="sample-note" id="sampleNote">처음 화면은 예시 입력(음력 1985년 3월 15일 오전 7시 30분, 남)의 풀이입니다.</p>
+    </form>
+  </section>
+
+  <div id="result" class="wrap" style="gap:20px"></div>
+
+  <p class="foot">음력 변환은 한국천문연구원 기준 자료, 절기는 천문 계산(오차 ±15분)을 씁니다. 풀이는 전통 명리 이론을 단순화한 참고용입니다.</p>
+</div>
+
+<script src="./vendor/korean-lunar-calendar.min.js"></script>
+<script src="./saju-core.js"></script>
+<script src="./saju-reading.js"></script>
+<script src="./saju-shorts.js"></script>
+<script>
+(function () {
+  const C = window.SajuCore, R = window.SajuReading, L = window.KoreanLunarCalendar
+  const $ = (id) => document.getElementById(id)
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+  const STORE = 'saju-last-input'
+
+  for (let m = 1; m <= 12; m++) $('lm').add(new Option(m + '월', m))
+  for (let d = 1; d <= 30; d++) $('ld').add(new Option(d + '일', d))
+  $('lm').value = 3; $('ld').value = 15
+
+  function readForm() {
+    const t = $('tm').value
+    const place = $('place').value
+    return {
+      name: $('name').value.trim(),
+      gender: $('gF').checked ? 'F' : 'M',
+      lunar: { year: +$('ly').value, month: +$('lm').value, day: +$('ld').value, leap: $('leap').checked },
+      time: $('tmx').checked || !t ? null : { hour: +t.split(':')[0], minute: +t.split(':')[1] },
+      useLmt: place !== 'none',
+      longitude: place === 'none' ? 127.5 : +place,
+      ziMode: $('zi').value,
+      place, rawTime: t, unknown: $('tmx').checked,
+    }
+  }
+  function fillForm(v) {
+    $('name').value = v.name || ''
+    ;(v.gender === 'F' ? $('gF') : $('gM')).checked = true
+    $('ly').value = v.lunar.year; $('lm').value = v.lunar.month; $('ld').value = v.lunar.day; $('leap').checked = !!v.lunar.leap
+    $('tm').value = v.rawTime || '07:30'; $('tmx').checked = !!v.unknown
+    $('place').value = v.place || '126.98'; $('zi').value = v.ziMode || 'next'
+  }
+
+  function updateConv() {
+    const v = readForm(), cal = new L(), el = $('conv')
+    $('tm').disabled = $('tmx').checked
+    if (!v.lunar.year || v.lunar.year < 1000 || v.lunar.year > 2050) { el.textContent = '1000~2050년 사이로 입력해 주세요.'; el.className = 'convert err'; return false }
+    if (cal.setLunarDate(v.lunar.year, v.lunar.month, v.lunar.day, v.lunar.leap)) {
+      const s = cal.getSolarCalendar()
+      const wd = '일월화수목금토'[new Date(s.year, s.month - 1, s.day).getDay()]
+      el.textContent = `양력 ${s.year}년 ${s.month}월 ${s.day}일 (${wd})`; el.className = 'convert'; return true
+    }
+    el.textContent = v.lunar.leap ? `${v.lunar.year}년에는 윤${v.lunar.month}월이 없습니다. 윤달 체크를 풀어 주세요.` : '없는 날짜입니다. 이 달은 29일까지예요.'
+    el.className = 'convert err'; return false
+  }
+
+  const glyph = (ch, el, sub, me) => `<span class="glyph el${el}${me ? ' me' : ''}"><b>${ch}</b><i>${sub}</i></span>`
+
+  function render(v, isExample) {
+    let r, a
+    try { r = C.compute(v, L); a = R.analyze(r, new Date()) } catch (e) {
+      $('result').innerHTML = `<section><p class="convert err">${esc(e.message)}</p></section>`; return
+    }
+    const P = r.pillars, E = a.EL_INFO, who = v.name ? esc(v.name) + '님' : '당신'
+    const order = ['hour', 'day', 'month', 'year']
+    const head = order.map((k) => `<th>${a.POS_KO[k]}<small>${a.POS_MEAN[k]}</small></th>`).join('')
+    const row = (label, fn) => `<tr><td class="rowh">${label}</td>${order.map((k) => `<td>${P[k] ? fn(k, P[k], a.cells[k]) : (label === '천간' || label === '지지' ? '<span class="empty-glyph">모름</span>' : '–')}</td>`).join('')}</tr>`
+    const sumEl = a.count.reduce((x, y) => x + y, 0)
+    const maxW = Math.max(...a.weighted)
+    const yf = a.yongFinal
+    const lack = a.count.map((c, i) => (c === 0 ? i : -1)).filter((i) => i >= 0)
+    const excess = a.count.map((c, i) => (c >= 3 ? i : -1)).filter((i) => i >= 0)
+    const gc = a.groupCount
+    const manyG = gc.map((c, i) => (c >= 3 ? i : -1)).filter((i) => i >= 0)
+    const noneG = gc.map((c, i) => (c === 0 ? i : -1)).filter((i) => i >= 0)
+    const fmtT = (t) => `${t.year}.${t.month}.${t.day} ${String(t.hour).padStart(2, '0')}:${String(t.minute).padStart(2, '0')}`
+    const lunarStr = `음력 ${r.lunar.year}년 ${r.lunar.leap ? '윤' : ''}${r.lunar.month}월 ${r.lunar.day}일`
+    const yearCard = (y, label) => `<div class="year">
+        <h3><span>${label} ${y.year}년 <span class="t${y.pillar.stemEl}" style="font-family:var(--f-hanja)">${y.pillar.hanja}</span></span><span class="grade g-${y.grade}">${y.grade}</span></h3>
+        <p><b>${y.stemGod}</b> · ${esc(y.text)}</p>
+        <p class="lead" style="font-size:.88rem">하반기(${y.branchGod}): ${esc(y.branchText)}</p>
+        ${y.notes.map((n) => `<p style="font-size:.88rem">• ${esc(n)}</p>`).join('')}
+      </div>`
+
+    $('result').innerHTML = `
+    <section class="verdict" aria-labelledby="v-h">
+      ${isExample ? '<span class="example-flag">예시 풀이</span>' : ''}
+      <span class="label">${who}의 사주 한 줄 결론</span>
+      <h2 id="v-h">${esc(a.summary.headline)}</h2>
+      <div class="chips">${a.summary.keywords.map((k) => `<span class="chip">${esc(k)}</span>`).join('')}</div>
+      <div class="cols">
+        <div><span class="label">핵심 근거</span><ul class="plain">${a.summary.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>
+        <div><span class="label">이렇게 해 보세요</span><ul class="plain">${a.summary.actions.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="ms-h">
+      <h2 id="ms-h">사주 명식 <span class="hj">命式</span></h2>
+      <p class="lead" style="font-size:.88rem">${lunarStr} · 양력 ${r.solar.year}.${r.solar.month}.${r.solar.day} ${r.hasTime ? v.rawTime : '(시간 모름)'} · ${v.gender === 'M' ? '남' : '여'} · ${r.animal}띠</p>
+      <div class="chart-scroll"><table class="ms">
+        <thead><tr><th></th>${head}</tr></thead>
+        <tbody>
+          ${row('십성', (k, p, c) => `<span class="god">${c.stemGod.name}</span>`)}
+          ${row('천간', (k, p) => glyph(C.STEMS_H[p.stem], p.stemEl, C.STEMS[p.stem] + ' · ' + C.ELEMENTS[p.stemEl], k === 'day'))}
+          ${row('지지', (k, p) => glyph(C.BRANCHES_H[p.branch], p.branchEl, C.BRANCHES[p.branch] + ' · ' + C.ELEMENTS[p.branchEl]))}
+          ${row('십성', (k, p, c) => `<span class="god">${c.branchGod.name}</span>`)}
+          ${row('지장간', (k, p, c) => c.hidden.map((h) => `<span class="t${C.STEM_EL[h.stem]}">${C.STEMS_H[h.stem]}</span>`).join(' '))}
+          ${row('12운성', (k, p, c) => c.stage)}
+        </tbody></table></div>
+      <p style="font-size:.88rem">테두리 친 <b>일간 ${C.STEMS_H[P.day.stem]}(${C.STEMS[P.day.stem]}${C.ELEMENTS[P.day.stemEl]})</b>이 '나'입니다. 나머지 글자의 십성은 모두 일간과의 관계로 정해집니다.</p>
+    </section>
+
+    <section aria-labelledby="dm-h">
+      <h2 id="dm-h">타고난 성향 <span class="hj">日干</span></h2>
+      <p><b>${esc(a.dayMaster.img)}</b> — ${esc(a.dayMaster.core)}</p>
+      <div class="cols">
+        <div><span class="label">강점</span><p>${esc(a.dayMaster.good)}</p></div>
+        <div><span class="label">약점</span><p>${esc(a.dayMaster.weak)}</p></div>
+      </div>
+      <div><span class="label">잘 맞는 분야</span><p>${esc(a.dayMaster.job)}</p></div>
+      <div><span class="label">일지 12운성 · ${a.cells.day.stage}</span><p>${esc(a.STAGE_TEXT[a.cells.day.stage])}</p></div>
+    </section>
+
+    <section aria-labelledby="el-h">
+      <h2 id="el-h">오행 분포 <span class="hj">五行</span></h2>
+      <div class="bars">${a.count.map((c, i) => `
+        <div class="bar"><span class="t${i}" style="font-weight:700">${E[i].name}</span>
+          <span class="track"><span class="el${i}" style="width:${(a.weighted[i] / maxW) * 100}%"></span></span>
+          <span class="num">${c}글자 · ${Math.round((a.weighted[i] / a.weighted.reduce((x, y) => x + y, 0)) * 100)}%</span></div>`).join('')}
+      </div>
+      <p class="lead" style="font-size:.82rem">글자 수는 겉으로 드러난 ${sumEl}글자 기준, 막대와 %는 지장간과 월지(계절) 가중치를 더한 실제 세력입니다.</p>
+      ${excess.length ? `<p><b>많은 기운:</b> ${excess.map((i) => `${E[i].name}(${E[i].key}) 기운이 넘쳐 ${E[i].organ} 건강을 챙기세요.`).join(' ')}</p>` : ''}
+      ${lack.length ? `<p><b>없는 기운:</b> ${lack.map((i) => `${E[i].name}이(가) 없어 ${E[i].key}의 면이 약할 수 있습니다. ${E[i].color} 계열과 ${E[i].act.split(',')[0]}로 보충하세요.`).join(' ')}</p>` : '<p>다섯 기운이 모두 있어 기본 균형이 좋은 사주입니다.</p>'}
+    </section>
+
+    <section aria-labelledby="tg-h">
+      <h2 id="tg-h">십성 분포 <span class="hj">十星</span></h2>
+      <div class="bars">${gc.map((c, i) => `
+        <div class="bar"><span style="font-weight:700">${C.GOD_GROUPS[i]}</span>
+          <span class="track"><span style="background:var(--accent);width:${(c / Math.max(...gc, 1)) * 100}%"></span></span>
+          <span class="num">${c}개</span></div>`).join('')}</div>
+      <ul class="list">
+        ${manyG.map((i) => `<li><span class="tag sal">${C.GOD_GROUPS[i]} 많음</span><span>${esc(a.GROUP_TEXT[i][0])}</span></li>`).join('')}
+        ${noneG.map((i) => `<li><span class="tag chung">${C.GOD_GROUPS[i]} 없음</span><span>${esc(a.GROUP_TEXT[i][1])}</span></li>`).join('')}
+        ${!manyG.length && !noneG.length ? '<li>십성이 고르게 퍼져 있어 한쪽으로 치우치지 않는 균형형입니다.</li>' : ''}
+      </ul>
+    </section>
+
+    <section aria-labelledby="st-h">
+      <h2 id="st-h">신강·신약과 용신 <span class="hj">用神</span></h2>
+      <p><b>${a.strength}</b> · 나를 돕는 기운 ${Math.round(a.ratio * 100)}%</p>
+      <div><div class="meter"><i style="left:${Math.min(98, Math.max(2, a.ratio * 100))}%"></i></div>
+        <div class="meter-l"><span>신약</span><span>중화</span><span>신강</span></div></div>
+      <p>용신(나를 살리는 기운)은 <b class="t${a.yong}">${E[a.yong].name}</b>, 희신(용신을 돕는 기운)은 <b class="t${a.hee}">${E[a.hee].name}</b>, 피할 기운은 <b class="t${a.giEl}">${E[a.giEl].name}</b>입니다. ${esc(a.reason)}</p>
+      ${a.johu ? `<p><b>계절 보정:</b> ${esc(a.johu.text)}</p>` : ''}
+      <div class="lucky">
+        <div><span class="label">행운의 색</span><b>${E[yf].color}</b></div>
+        <div><span class="label">좋은 방향</span><b>${E[yf].dir}</b></div>
+        <div><span class="label">행운의 숫자</span><b>${E[yf].num}</b></div>
+        <div><span class="label">좋은 계절</span><b>${E[yf].season}</b></div>
+        <div><span class="label">도움 되는 맛</span><b>${E[yf].taste}</b></div>
+        <div><span class="label">챙길 몸</span><b>${E[yf].organ}</b></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="rel-h">
+      <h2 id="rel-h">합·충과 신살 <span class="hj">合沖 神煞</span></h2>
+      <ul class="list">
+        ${a.relations.map((x) => `<li><span class="tag ${x.type === '합' ? 'hap' : 'chung'}">${x.type}</span><span><b>${esc(x.text)}</b> — ${esc(x.desc)}</span></li>`).join('') || '<li>원국 안에 뚜렷한 합·충이 없어 흐름이 잔잔합니다.</li>'}
+        ${a.sinsal.map((s) => `<li><span class="tag sal">${s.name}</span><span>${s.pos}(${s.base} 기준) — ${esc(s.desc)}</span></li>`).join('')}
+      </ul>
+    </section>
+
+    <section aria-labelledby="lv-h">
+      <h2 id="lv-h">연애·배우자 <span class="hj">配偶</span></h2>
+      <p>${esc(a.spouseText)}</p>
+      <p class="lead" style="font-size:.88rem">배우자 자리(일지)는 ${C.BRANCHES_H[P.day.branch]}(${C.BRANCHES[P.day.branch]}) · ${a.cells.day.branchGod.name} · ${a.cells.day.stage}</p>
+    </section>
+
+    <section aria-labelledby="dw-h">
+      <h2 id="dw-h">대운 흐름 <span class="hj">大運</span></h2>
+      <p style="font-size:.9rem">대운수 <b>${r.daewoon.start}</b> · ${r.daewoon.forward ? '순행' : '역행'} — 10년마다 바뀌는 큰 운입니다. ${a.curDwInfo ? `지금(${a.age}세 무렵)은 <b>${a.curDwInfo.hanja} 대운</b>(${a.curDwInfo.stemGod}·${a.curDwInfo.branchGod})으로, ${a.curDwInfo.good > 0 ? '용신을 돕는 순풍의 시기입니다.' : a.curDwInfo.good < 0 ? '힘이 드는 시기이니 무리한 확장보다 내실을 다지세요.' : '무난하게 흘러가는 시기입니다.'}` : `첫 대운은 ${r.daewoon.start}세에 시작합니다.`}</p>
+      <div class="dw">${a.daewoon.map((d, i) => `<div class="${i === a.curDw && !a.beforeFirst ? 'cur' : ''}">
+          <span class="age">${d.age}세~</span><span class="gz"><span class="t${d.stemEl}">${C.STEMS_H[d.stem]}</span><span class="t${d.branchEl}">${C.BRANCHES_H[d.branch]}</span></span>
+          <span class="gd">${d.stemGod}</span><br><span class="mark ${d.good > 0 ? 'up' : d.good < 0 ? 'down' : ''}">${d.good > 0 ? '▲ 좋음' : d.good < 0 ? '▼ 주의' : '– 보통'}</span></div>`).join('')}</div>
+    </section>
+
+    <section aria-labelledby="yr-h">
+      <h2 id="yr-h">올해와 내년 운세 <span class="hj">歲運</span></h2>
+      <div class="years">${yearCard(a.thisYear, '올해')}${yearCard(a.nextYear, '내년')}</div>
+    </section>
+
+    <section aria-labelledby="bs-h">
+      <h2 id="bs-h">계산 근거</h2>
+      <dl class="basis">
+        <dt>음력 → 양력</dt><dd>${lunarStr} → ${r.solar.year}년 ${r.solar.month}월 ${r.solar.day}일</dd>
+        <dt>년주 기준</dt><dd>입춘 기준 ${r.sajuYear}년 (${P.year.hanja})</dd>
+        <dt>월주 기준</dt><dd>절입 ${fmtT(r.jie.prev)} ~ ${fmtT(r.jie.next)} (태양 황경 ${r.sunLongitude.toFixed(2)}°)</dd>
+        ${r.hasTime ? `<dt>시각 보정</dt><dd>${v.rawTime} → ${String(r.localTime.hour).padStart(2, '0')}:${String(r.localTime.minute).padStart(2, '0')} (${r.lmtShift >= 0 ? '+' : ''}${r.lmtShift}분${r.tz.dst ? ', 서머타임 1시간 포함' : ''}${r.tz.standard === 8.5 ? ', 당시 표준시 UTC+8:30' : ''})</dd>` : '<dt>시주</dt><dd>시간을 몰라 년·월·일 6글자로 풀이했습니다.</dd>'}
+        <dt>대운수</dt><dd>${r.daewoon.forward ? '다음' : '지난'} 절입까지 ${r.daewoon.days.toFixed(1)}일 ÷ 3 ≈ ${r.daewoon.start}</dd>
+      </dl>
+      ${Math.abs(jdDiff(r.jie.prev, r.solar, v)) < 2 / 24 || Math.abs(jdDiff(r.jie.next, r.solar, v)) < 2 / 24 ?'<p class="convert err">절입 시각과 2시간 이내로 가까워 월주가 바뀔 수 있습니다. 정확한 출생 시각을 확인하세요.</p>' : ''}
+    </section>
+
+    <section class="shorts" aria-labelledby="sh-h">
+      <h2 id="sh-h">쇼츠 영상 만들기 <span class="hj">影像</span></h2>
+      <p>이 풀이를 30초 세로 영상(1080×1920, 배경음악 포함)으로 만듭니다. 유튜브 쇼츠·인스타그램 릴스에 바로 올릴 수 있어요.</p>
+      <button type="button" class="primary" id="shMake">쇼츠 영상 만들기</button>
+      <div class="sh-stage" id="shStage" hidden>
+        <canvas id="shCanvas" width="1080" height="1920" aria-label="만들고 있는 영상 미리보기"></canvas>
+        <video id="shVideo" controls playsinline hidden></video>
+      </div>
+      <div class="sh-progress" id="shProg" hidden><span></span></div>
+      <p class="sh-status" id="shStatus" aria-live="polite"></p>
+      <div class="sh-actions" id="shActions" hidden>
+        <a class="sh-btn main" id="shSave" href="#">영상 저장</a>
+        <button type="button" class="sh-btn" id="shShare" hidden>공유하기</button>
+        <button type="button" class="sh-btn" id="shAgain">다시 만들기</button>
+      </div>
+    </section>`
+    last = { r, a, v, isExample }
+  }
+
+  /* ---------- 쇼츠 영상: 캔버스에 그리면서 브라우저 녹화기(MediaRecorder)로 녹화 ---------- */
+  let last = null, busy = false, videoUrl = null, videoFile = null
+  // claude.ai 미리보기 창에서는 일반 다운로드 링크가 막혀 있어 뷰어의 저장 기능(downloads)을 쓴다.
+  // 배포된 페이지에는 window.claude 가 없으므로 그대로 링크로 저장된다.
+  let dlCap = null
+  try { if (window.claude && window.claude.use) window.claude.use('downloads').then((d) => { dlCap = d }, () => {}) } catch (_) {}
+  async function saveVideo(e) {
+    if (!dlCap || !videoFile) return // 일반 다운로드 링크로 저장
+    e.preventDefault()
+    const status = $('shStatus')
+    try {
+      await dlCap.save({ filename: videoFile.name, data: videoFile })
+      status.textContent = `저장했어요: ${videoFile.name}`; status.className = 'sh-status'
+    } catch (err) {
+      const code = err && err.code
+      status.className = 'sh-status' + (code === 'declined' ? '' : ' err')
+      status.textContent = code === 'declined' ? '저장을 취소했어요. 다시 누르면 저장할 수 있어요.'
+        : code === 'rate_limited' ? '저장 창이 이미 열려 있어요. 잠시 뒤 다시 눌러 주세요.'
+        : code === 'too_large' ? '파일이 너무 커서 이 화면에서는 저장할 수 없어요.'
+        : '이 화면에서는 저장할 수 없어요. 배포된 사주 명식 페이지에서 만들어 주세요.'
+    }
+  }
+  function pickMime() {
+    const types = ['video/mp4;codecs="avc1.640028,mp4a.40.2"', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+    return types.find((t) => MediaRecorder.isTypeSupported(t)) || ''
+  }
+  async function makeShorts() {
+    if (busy || !last) return
+    const S = window.SajuShorts, status = $('shStatus'), prog = $('shProg'), bar = prog.firstElementChild
+    const cv = $('shCanvas'), video = $('shVideo')
+    if (!window.MediaRecorder || !cv.captureStream || !(window.AudioContext || window.webkitAudioContext)) {
+      status.textContent = '이 브라우저는 영상 녹화를 지원하지 않습니다. 최신 Chrome, Safari, Edge에서 열어 주세요.'
+      status.className = 'sh-status err'; return
+    }
+    busy = true
+    $('shMake').disabled = true; $('shMake').hidden = false; $('shActions').hidden = true
+    $('shStage').hidden = false; cv.hidden = false; video.hidden = true; video.pause()
+    prog.hidden = false; bar.style.width = '0%'; status.className = 'sh-status'
+    let hiddenDuring = false
+    const onVis = () => { if (document.hidden) hiddenDuring = true }
+    document.addEventListener('visibilitychange', onVis)
+    try {
+      status.textContent = '글꼴을 준비하고 있어요…'
+      const story = S.buildStory(last.r, last.a, C, R, { name: last.v.name, example: last.isExample })
+      await S.loadFonts(story, document)
+      const ctx = cv.getContext('2d')
+      S.drawFrame(ctx, story, 0)
+
+      const AC = window.AudioContext || window.webkitAudioContext
+      const ac = new AC()
+      await ac.resume()
+      const samples = S.musicSamples(ac.sampleRate)
+      const buf = ac.createBuffer(1, samples.length, ac.sampleRate)
+      buf.getChannelData(0).set(samples)
+      const src = ac.createBufferSource(); src.buffer = buf
+      const dest = ac.createMediaStreamDestination(); src.connect(dest)
+      const stream = new MediaStream([...cv.captureStream(S.FPS).getVideoTracks(), ...dest.stream.getAudioTracks()])
+      const mime = pickMime()
+      const rec = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: 8000000, audioBitsPerSecond: 160000 })
+      const chunks = []
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data) }
+      const stopped = new Promise((res) => (rec.onstop = res))
+
+      rec.start(1000); src.start()
+      const t0 = ac.currentTime
+      await new Promise((res) => {
+        const tick = () => {
+          const t = ac.currentTime - t0
+          S.drawFrame(ctx, story, Math.min(t, S.DURATION))
+          bar.style.width = Math.min(100, (t / S.DURATION) * 100) + '%'
+          status.textContent = `녹화 중… ${Math.min(S.DURATION, Math.floor(t))} / ${S.DURATION}초 · 이 화면을 열어 두세요`
+          if (t >= S.DURATION) return res()
+          requestAnimationFrame(tick)
+        }
+        tick()
+      })
+      rec.stop(); try { src.stop() } catch (_) {}
+      await stopped
+      stream.getTracks().forEach((tr) => tr.stop())
+      ac.close()
+
+      const type = (rec.mimeType || mime || 'video/webm').split(';')[0]
+      const ext = type.includes('mp4') ? 'mp4' : 'webm'
+      const blob = new Blob(chunks, { type })
+      if (videoUrl) URL.revokeObjectURL(videoUrl)
+      videoUrl = URL.createObjectURL(blob)
+      const fileName = `${story.fileName}.${ext}`
+      video.src = videoUrl; video.hidden = false; cv.hidden = true
+      const save = $('shSave'); save.href = videoUrl; save.download = fileName
+      const file = new File([blob], fileName, { type })
+      videoFile = file
+      const share = $('shShare')
+      share.hidden = !(navigator.canShare && navigator.canShare({ files: [file] }))
+      share.onclick = () => navigator.share({ files: [file], title: '내 사주 쇼츠' }).catch(() => {})
+      $('shMake').hidden = true; $('shActions').hidden = false; prog.hidden = true
+      status.textContent = `완성! ${ext.toUpperCase()} · ${(blob.size / 1048576).toFixed(1)}MB` +
+        (hiddenDuring ? ' — 녹화 중 다른 화면으로 이동해 일부 장면이 멈췄을 수 있어요. 이상하면 다시 만들어 주세요.' : '')
+    } catch (e) {
+      status.textContent = '영상을 만들지 못했습니다: ' + (e && e.message ? e.message : e) + ' · 다시 시도해 주세요.'
+      status.className = 'sh-status err'; prog.hidden = true
+    } finally {
+      document.removeEventListener('visibilitychange', onVis)
+      busy = false; $('shMake').disabled = false
+    }
+  }
+  $('result').addEventListener('click', (e) => {
+    const id = e.target && e.target.id
+    if (id === 'shMake' || id === 'shAgain') makeShorts()
+    if (id === 'shSave') saveVideo(e)
+  })
+  function jdDiff(t, s, v) {
+    if (!v.time) return 99
+    const a = Date.UTC(t.year, t.month - 1, t.day, t.hour, t.minute)
+    const b = Date.UTC(s.year, s.month - 1, s.day, v.time.hour, v.time.minute)
+    return (a - b) / 86400000
+  }
+
+  ;['ly', 'lm', 'ld', 'leap', 'tmx'].forEach((id) => $(id).addEventListener('input', updateConv))
+  $('f').addEventListener('submit', (e) => {
+    e.preventDefault()
+    if (!updateConv()) { $('ly').focus(); return }
+    const v = readForm()
+    try { localStorage.setItem(STORE, JSON.stringify(v)) } catch (_) {}
+    $('sampleNote').hidden = true
+    render(v, false)
+    $('result').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
+  })
+
+  let saved = null
+  try { saved = JSON.parse(localStorage.getItem(STORE) || 'null') } catch (_) {}
+  if (saved && saved.lunar) { fillForm(saved); $('sampleNote').hidden = true }
+  updateConv()
+  render(readForm(), !saved)
+})()
+</script>
+</body>
+</html>

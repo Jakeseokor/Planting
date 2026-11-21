@@ -91,3 +91,20 @@ iPhone/iPad Safari → 공유 → 홈 화면에 추가. 데이터는 그 기기�
 - 풀이: 한 줄 결론 → 명식표(십성·지장간·12운성) → 일간 성향 → 오행·십성 분포 → 신강/신약·용신(행운 색·방향·숫자)
   → 합충·신살 → 연애·배우자 → 대운(현재 위치) → 올해·내년 세운 → 계산 근거
 - 마지막 입력값은 그 기기의 localStorage에 기억됩니다.
+
+### 사주 쇼츠 영상 만들기 (30초, 1080×1920 MP4)
+
+사주 명식과 같은 계산 엔진으로 풀이한 결과를 세로 쇼츠 영상(배경음악 포함)으로 만듭니다. 필요: `ffmpeg`, Playwright Chromium.
+
+```bash
+npm install
+npx playwright install chromium     # 처음 한 번 (Playwright 가 없으면 npm i -D playwright 먼저)
+npm run shorts -- --lunar 1985-03-15 --time 07:30 --gender M --example
+npm run shorts -- --lunar 1990-05-10 --leap --time unknown --gender F --name 김하늘 --out haneul.mp4
+npm run shorts -- --lunar 1985-03-15 --time 07:30 --gender M --keys   # 장면 8개 미리보기 PNG만 (몇 초)
+npm run shorts -- --help
+```
+
+- 구성(8장면): 첫 장면 질문 → 여덟 글자 → 일간 → 오행 → 타고난 무기(십성·신살) → 대운·올해·내년 → 행운 처방 → 마무리
+- 파일: `scripts/saju-shorts/make.mjs`(문구·렌더링), `template.html`(디자인·애니메이션), `music.mjs`(배경음악 합성)
+- 글꼴은 devDependencies 의 `@fontsource/*` 를 써서 한글 글꼴이 없는 서버에서도 똑같이 나옵니다. 결과 `*.mp4` 는 git 에서 제외됩니다.

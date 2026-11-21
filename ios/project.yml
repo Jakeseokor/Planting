@@ -1,0 +1,28 @@
+name: WakeUpChallenge
+options:
+  bundleIdPrefix: com.jakeseokor
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  WakeUpChallenge:
+    type: application
+    platform: iOS
+    sources:
+      - WakeUpChallenge
+    info:
+      path: WakeUpChallenge/Info.plist
+      properties:
+        CFBundleDisplayName: 미션 알람
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSCameraUsageDescription: 지정 장소 사진 미션에 사용합니다.
+        NSLocationWhenInUseUsageDescription: 사진 미션에서 지정 장소를 확인하는 데 사용합니다.
+        NSMotionUsageDescription: 걸음 수 미션에 사용합니다.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jakeseokor.wakeupchallenge
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: NO

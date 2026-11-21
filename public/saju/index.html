@@ -440,7 +440,27 @@ table.ms { width: 100%; border-collapse: collapse; text-align: center; min-width
   }
 
   /* ---------- 쇼츠 영상: 캔버스에 그리면서 브라우저 녹화기(MediaRecorder)로 녹화 ---------- */
-  let last = null, busy = false, videoUrl = null
+  let last = null, busy = false, videoUrl = null, videoFile = null
+  // claude.ai 미리보기 창에서는 일반 다운로드 링크가 막혀 있어 뷰어의 저장 기능(downloads)을 쓴다.
+  // 배포된 페이지에는 window.claude 가 없으므로 그대로 링크로 저장된다.
+  let dlCap = null
+  try { if (window.claude && window.claude.use) window.claude.use('downloads').then((d) => { dlCap = d }, () => {}) } catch (_) {}
+  async function saveVideo(e) {
+    if (!dlCap || !videoFile) return // 일반 다운로드 링크로 저장
+    e.preventDefault()
+    const status = $('shStatus')
+    try {
+      await dlCap.save({ filename: videoFile.name, data: videoFile })
+      status.textContent = `저장했어요: ${videoFile.name}`; status.className = 'sh-status'
+    } catch (err) {
+      const code = err && err.code
+      status.className = 'sh-status' + (code === 'declined' ? '' : ' err')
+      status.textContent = code === 'declined' ? '저장을 취소했어요. 다시 누르면 저장할 수 있어요.'
+        : code === 'rate_limited' ? '저장 창이 이미 열려 있어요. 잠시 뒤 다시 눌러 주세요.'
+        : code === 'too_large' ? '파일이 너무 커서 이 화면에서는 저장할 수 없어요.'
+        : '이 화면에서는 저장할 수 없어요. 배포된 사주 명식 페이지에서 만들어 주세요.'
+    }
+  }
   function pickMime() {
     const types = ['video/mp4;codecs="avc1.640028,mp4a.40.2"', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
     return types.find((t) => MediaRecorder.isTypeSupported(t)) || ''
@@ -509,13 +529,13 @@ table.ms { width: 100%; border-collapse: collapse; text-align: center; min-width
       video.src = videoUrl; video.hidden = false; cv.hidden = true
       const save = $('shSave'); save.href = videoUrl; save.download = fileName
       const file = new File([blob], fileName, { type })
+      videoFile = file
       const share = $('shShare')
       share.hidden = !(navigator.canShare && navigator.canShare({ files: [file] }))
       share.onclick = () => navigator.share({ files: [file], title: '내 사주 쇼츠' }).catch(() => {})
       $('shMake').hidden = true; $('shActions').hidden = false; prog.hidden = true
       status.textContent = `완성! ${ext.toUpperCase()} · ${(blob.size / 1048576).toFixed(1)}MB` +
-        (hiddenDuring ? ' — 녹화 중 다른 화면으로 이동해 일부 장면이 멈췄을 수 있어요. 이상하면 다시 만들어 주세요.' : '') +
-        ' · "영상 저장"이 동작하지 않는 미리보기 창에서는 배포된 사주 명식 페이지에서 만들어 주세요.'
+        (hiddenDuring ? ' — 녹화 중 다른 화면으로 이동해 일부 장면이 멈췄을 수 있어요. 이상하면 다시 만들어 주세요.' : '')
     } catch (e) {
       status.textContent = '영상을 만들지 못했습니다: ' + (e && e.message ? e.message : e) + ' · 다시 시도해 주세요.'
       status.className = 'sh-status err'; prog.hidden = true
@@ -527,6 +547,7 @@ table.ms { width: 100%; border-collapse: collapse; text-align: center; min-width
   $('result').addEventListener('click', (e) => {
     const id = e.target && e.target.id
     if (id === 'shMake' || id === 'shAgain') makeShorts()
+    if (id === 'shSave') saveVideo(e)
   })
   function jdDiff(t, s, v) {
     if (!v.time) return 99
